@@ -4,3 +4,5 @@ export type { EntryId, EntryAction, MemoryEntryDecrypted, QueryOptions } from '.
 export { SoftwareKeyManager } from './keys/SoftwareKeyManager.js';
 export { KeychainKeyManager } from './keys/KeychainKeyManager.js';
 export { resolveBackend } from './keys/platform.js';
+export { SqliteVault } from './vault/SqliteVault.js';
+export type { SqliteVaultOptions, Embedder } from './vault/SqliteVault.js';

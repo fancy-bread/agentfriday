@@ -35,7 +35,16 @@ v1 `MemoryVault` implementation: SQLCipher database via `@signalapp/better-sqlit
 Local daemon over stdio. Wires the four MCP tool contracts (`memory_append`, `memory_query`, `memory_amend`, `memory_redact`) to the `MemoryVault` interface. Handles encrypt-before-write and decrypt-after-read. `start` command entry point.
 
 ### 005 — Semantic index
-Embedding generation via Ollama + `nomic-embed-text`. `sqlite-vec` virtual table for ANN search. Zero-vector fallback when Ollama is unavailable. Re-indexing path for entries stored without embeddings.
+Embedding generation via Ollama + `nomic-embed-text`. Zero-vector fallback when Ollama is unavailable. Re-indexing path for entries stored without embeddings.
+
+> **Constraint from 003**: `@signalapp/better-sqlite3` compiles SQLite without
+> `SQLITE_ENABLE_LOAD_EXTENSION` — sqlite-vec cannot be loaded as a SQLite extension.
+> This spec must choose an alternative vector search approach. Leading options:
+> - **A) Cosine similarity in TypeScript** — fetch entries, compute similarity in
+>   application code over stored embedding blobs. No extension, no extra file.
+> - **B) Separate vector index file** — hnswlib or usearch alongside `vault.db`.
+>   Vectors are not sensitive (per TDD) and can live unencrypted.
+> Option A is simpler; Option B scales better. Decision belongs in this spec.
 
 ### 006 — Skill files
 The four `friday-*.md` skill files: `friday-note`, `friday-recall`, `friday-amend`, `friday-forget`. Includes query-confirm-act pattern for amend and forget. Installed into the user's skill path by the packaging step.

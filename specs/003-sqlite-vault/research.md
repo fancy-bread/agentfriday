@@ -115,3 +115,24 @@ a different HKDF context: `agent-friday-vault-v1`).
   failure modes, more complex init/status.
 - Use KeyManager encryption key directly as SQLCipher key — rejected; key reuse
   across different cryptographic contexts is a security anti-pattern.
+
+---
+
+## Known Constraint: sqlite-vec and `SQLITE_ENABLE_LOAD_EXTENSION`
+
+`@signalapp/better-sqlite3` is compiled without `SQLITE_ENABLE_LOAD_EXTENSION` —
+a deliberate security hardening choice. This means sqlite-vec cannot be loaded as a
+SQLite extension at runtime, regardless of CLI flags or configuration.
+
+**Impact**: The `entry_vectors` virtual table and ANN query path are inactive in v1.
+`SqliteVault.query()` falls back to recency ordering, which is correct per the spec.
+Embedding blobs are still stored with each entry, ready for use by a future indexer.
+
+**Resolution**: Deferred to `005-semantic-index`. That spec must select an approach
+that does not depend on SQLite extension loading. Leading options: cosine similarity
+computed in TypeScript over stored blobs (Option A), or a separate vector index file
+using hnswlib or usearch (Option B). Both are compatible with the current schema.
+
+This is not a regression — the recency fallback is explicitly required by the spec
+and all tests pass. Semantic ranking is a quality-of-recall improvement, not a
+correctness requirement for v1.
