@@ -1,0 +1,31 @@
+{
+  "name": "agentfriday",
+  "version": "1.0.0",
+  "description": "Trusted agent assistant with immutable secreted memory.",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "test:contract": "vitest run tests/contract"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fancy-bread/agentfriday.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/fancy-bread/agentfriday/issues"
+  },
+  "homepage": "https://github.com/fancy-bread/agentfriday#readme",
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.6"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
