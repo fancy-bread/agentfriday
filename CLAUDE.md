@@ -73,6 +73,8 @@ specs/
 ## Active Technologies
 - TypeScript 5.x / Node.js 24 LTS + None — interface definitions have no runtime dependencies (001-vault-interface)
 - N/A (interface only; implementation in `003-sqlite-vault`) (001-vault-interface)
+- TypeScript 5.x / Node.js 24 LTS + `libsodium-wrappers`, `@types/libsodium-wrappers`, `node-keytar`, `commander` (002-key-custody)
+- macOS Keychain under `io.agentfriday.vault` (primary); `~/.agent-friday/keys/` at 0600 (fallback) (002-key-custody)
 
 ## Recent Changes
 - 001-vault-interface: Added TypeScript 5.x / Node.js 24 LTS + None — interface definitions have no runtime dependencies
