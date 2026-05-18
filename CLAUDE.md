@@ -69,3 +69,10 @@ specs/
 - Web/mobile UI
 - Key escrow / recovery
 - Anything requiring a cloud service
+
+## Active Technologies
+- TypeScript 5.x / Node.js 24 LTS + None — interface definitions have no runtime dependencies (001-vault-interface)
+- N/A (interface only; implementation in `003-sqlite-vault`) (001-vault-interface)
+
+## Recent Changes
+- 001-vault-interface: Added TypeScript 5.x / Node.js 24 LTS + None — interface definitions have no runtime dependencies
