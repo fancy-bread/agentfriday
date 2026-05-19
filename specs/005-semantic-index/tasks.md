@@ -15,7 +15,7 @@
 
 **Purpose**: Create the embeddings module directory
 
-- [ ] T001 Create `src/embeddings/` directory (will hold cosine.ts and OllamaEmbedder.ts)
+- [x] T001 Create `src/embeddings/` directory (will hold cosine.ts and OllamaEmbedder.ts)
 
 ---
 
@@ -25,8 +25,8 @@
 
 **⚠️ CRITICAL**: US1 and US2 both require these before implementation can begin
 
-- [ ] T002 Create `src/embeddings/cosine.ts` — export `cosineSimilarity(a: Float32Array, b: Float32Array): number` (dot product / product of magnitudes; return 0 if either magnitude is 0) and `isZeroVector(v: Float32Array): boolean` (true if all elements are 0)
-- [ ] T003 [P] Add `ACTIVE_ENTRIES_WITH_EMBEDDINGS` SQL constant to `src/db/queries.ts` — same CTE filter as `ACTIVE_ENTRIES_RECENCY` but also selects `embedding` column and has no `LIMIT ?` (all active rows returned; TypeScript applies the limit after cosine sort)
+- [x] T002 Create `src/embeddings/cosine.ts` — export `cosineSimilarity(a: Float32Array, b: Float32Array): number` (dot product / product of magnitudes; return 0 if either magnitude is 0) and `isZeroVector(v: Float32Array): boolean` (true if all elements are 0)
+- [x] T003 [P] Add `ACTIVE_ENTRIES_WITH_EMBEDDINGS` SQL constant to `src/db/queries.ts` — same CTE filter as `ACTIVE_ENTRIES_RECENCY` but also selects `embedding` column and has no `LIMIT ?` (all active rows returned; TypeScript applies the limit after cosine sort)
 
 **Checkpoint**: `npx tsc --noEmit` passes; cosine functions exist and SQL constant is exported
 
@@ -40,12 +40,12 @@
 
 ### Tests for User Story 2
 
-- [ ] T004 [P] [US2] Create `tests/unit/ollama-embedder.test.ts` — mock global `fetch` using `vi.stubGlobal`: (1) 200 response with valid embeddings array → returns Float32Array of length 768; (2) fetch throws (network error) → `embed()` throws; (3) 503 response → `embed()` throws; (4) malformed JSON body → `embed()` throws
+- [x] T004 [P] [US2] Create `tests/unit/ollama-embedder.test.ts` — mock global `fetch` using `vi.stubGlobal`: (1) 200 response with valid embeddings array → returns Float32Array of length 768; (2) fetch throws (network error) → `embed()` throws; (3) 503 response → `embed()` throws; (4) malformed JSON body → `embed()` throws
 
 ### Implementation for User Story 2
 
-- [ ] T005 [US2] Create `src/embeddings/OllamaEmbedder.ts` — export class `OllamaEmbedder` with `constructor(baseUrl: string, model: string)` and `async embed(content: string): Promise<Float32Array>`; POST to `${baseUrl}/api/embed` with body `{ model, input: content }` and `signal: AbortSignal.timeout(2000)`; parse `response.embeddings[0]` as Float32Array; throw on any failure
-- [ ] T006 [US2] Update `runStart()` in `src/cli/start.ts` — import `OllamaEmbedder` from `../embeddings/OllamaEmbedder.js`; instantiate with `('http://localhost:11434', 'nomic-embed-text')`; wrap in a `const embedder: Embedder = async (content) => { try { return await ollama.embed(content); } catch { return new Float32Array(768); } }`; pass `embedder` to `SqliteVault.open({ keyManager, embedder, dbPath: options.vaultPath })`
+- [x] T005 [US2] Create `src/embeddings/OllamaEmbedder.ts` — export class `OllamaEmbedder` with `constructor(baseUrl: string, model: string)` and `async embed(content: string): Promise<Float32Array>`; POST to `${baseUrl}/api/embed` with body `{ model, input: content }` and `signal: AbortSignal.timeout(2000)`; parse `response.embeddings[0]` as Float32Array; throw on any failure
+- [x] T006 [US2] Update `runStart()` in `src/cli/start.ts` — import `OllamaEmbedder` from `../embeddings/OllamaEmbedder.js`; instantiate with `('http://localhost:11434', 'nomic-embed-text')`; wrap in a `const embedder: Embedder = async (content) => { try { return await ollama.embed(content); } catch { return new Float32Array(768); } }`; pass `embedder` to `SqliteVault.open({ keyManager, embedder, dbPath: options.vaultPath })`
 
 **Checkpoint**: `npm run test:unit` passes ollama-embedder tests; daemon launches and stores entries with or without Ollama running
 
@@ -59,12 +59,12 @@
 
 ### Tests for User Story 1
 
-- [ ] T007 [P] [US1] Write `tests/unit/cosine.test.ts` — 6 cases: (1) identical non-zero vectors → similarity = 1.0; (2) orthogonal vectors → 0.0; (3) opposite vectors → -1.0; (4) zero-vector input → 0 (not NaN); (5) `isZeroVector(new Float32Array(768))` → true; (6) `isZeroVector` of vector with one non-zero element → false
-- [ ] T008 [US1] Write `tests/integration/semantic.test.ts` using `openVault()` from `tests/integration/helpers/openVault.js` with an inline `StubEmbedder` (a `Map<string, Float32Array>` keyed by content string): (1) entry stored with real embedding appears above zero-vector entry in cosine-ranked query; (2) query with context closest to entry A ranks A above B; (3) limit parameter caps cosine-ranked results; (4) all entries are zero-vectors → falls back to recency, no error
+- [x] T007 [P] [US1] Write `tests/unit/cosine.test.ts` — 6 cases: (1) identical non-zero vectors → similarity = 1.0; (2) orthogonal vectors → 0.0; (3) opposite vectors → -1.0; (4) zero-vector input → 0 (not NaN); (5) `isZeroVector(new Float32Array(768))` → true; (6) `isZeroVector` of vector with one non-zero element → false
+- [x] T008 [US1] Write `tests/integration/semantic.test.ts` using `openVault()` from `tests/integration/helpers/openVault.js` with an inline `StubEmbedder` (a `Map<string, Float32Array>` keyed by content string): (1) entry stored with real embedding appears above zero-vector entry in cosine-ranked query; (2) query with context closest to entry A ranks A above B; (3) limit parameter caps cosine-ranked results; (4) all entries are zero-vectors → falls back to recency, no error
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Update `query()` in `src/vault/SqliteVault.ts` — import `cosineSimilarity` and `isZeroVector` from `../embeddings/cosine.js`; import `ACTIVE_ENTRIES_WITH_EMBEDDINGS` from `../db/queries.js`; add interface `EntryRowWithEmbedding extends EntryRow { embedding: Buffer }`; when `this.embedder` is set: await embedder(context), check `isZeroVector(queryVec)` — if zero fall through to recency; else fetch all active rows with `ACTIVE_ENTRIES_WITH_EMBEDDINGS`, compute `cosineSimilarity` for each non-zero-vector row, sort descending, slice to `limit`, decrypt and return
+- [x] T009 [US1] Update `query()` in `src/vault/SqliteVault.ts` — import `cosineSimilarity` and `isZeroVector` from `../embeddings/cosine.js`; import `ACTIVE_ENTRIES_WITH_EMBEDDINGS` from `../db/queries.js`; add interface `EntryRowWithEmbedding extends EntryRow { embedding: Buffer }`; when `this.embedder` is set: await embedder(context), check `isZeroVector(queryVec)` — if zero fall through to recency; else fetch all active rows with `ACTIVE_ENTRIES_WITH_EMBEDDINGS`, compute `cosineSimilarity` for each non-zero-vector row, sort descending, slice to `limit`, decrypt and return
 
 **Checkpoint**: `npm run test:integration` passes semantic tests; cosine-ranked entries returned in correct order
 
@@ -78,7 +78,7 @@
 
 ### Tests for User Story 3
 
-- [ ] T010 [US3] Add `describe('graceful degradation')` block to `tests/integration/semantic.test.ts`: (1) embedder always returns zero-vector → `memory_append` succeeds and returns id; (2) embedder always returns zero-vector → `memory_query` returns entries by recency without error; (3) vault opened with NO embedder (undefined) → `memory_query` returns by recency without error; (4) switch StubEmbedder from zero-vector to real vector mid-session → new writes get real embeddings, existing entries remain zero-vector
+- [x] T010 [US3] Add `describe('graceful degradation')` block to `tests/integration/semantic.test.ts`: (1) embedder always returns zero-vector → `memory_append` succeeds and returns id; (2) embedder always returns zero-vector → `memory_query` returns entries by recency without error; (3) vault opened with NO embedder (undefined) → `memory_query` returns by recency without error; (4) switch StubEmbedder from zero-vector to real vector mid-session → new writes get real embeddings, existing entries remain zero-vector
 
 **Checkpoint**: All degradation tests pass; no changes to spec behaviour confirmed
 
@@ -88,8 +88,8 @@
 
 **Purpose**: Typecheck, full suite, cleanup
 
-- [ ] T011 [P] Run `npm run typecheck` — fix any TypeScript errors in `src/embeddings/`, `src/vault/SqliteVault.ts`, `src/cli/start.ts`, `tests/unit/`, `tests/integration/semantic.test.ts`
-- [ ] T012 Run `npm test` — all 16+ test files pass including new unit and integration tests
+- [x] T011 [P] Run `npm run typecheck` — fix any TypeScript errors in `src/embeddings/`, `src/vault/SqliteVault.ts`, `src/cli/start.ts`, `tests/unit/`, `tests/integration/semantic.test.ts`
+- [x] T012 Run `npm test` — all 16+ test files pass including new unit and integration tests
 
 ---
 

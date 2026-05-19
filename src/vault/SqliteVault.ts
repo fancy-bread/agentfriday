@@ -10,7 +10,9 @@ import {
   INSERT_ENTRY, INSERT_VECTOR, GET_ENTRY_BY_ID,
   GET_LAST_ENTRY_ID, GET_LAST_N_ENTRIES,
   ACTIVE_ENTRIES_RECENCY, ACTIVE_ENTRIES_VECTOR,
+  ACTIVE_ENTRIES_WITH_EMBEDDINGS,
 } from '../db/queries.js';
+import { cosineSimilarity, isZeroVector } from '../embeddings/cosine.js';
 import path from 'path';
 import os from 'os';
 
@@ -32,6 +34,14 @@ interface EntryRow {
   created_at: number;
   previous_id: string | null;
   action: EntryAction;
+}
+
+interface EntryRowWithEmbedding extends EntryRow {
+  embedding: Buffer;
+}
+
+function bufToFloat32(buf: Buffer): Float32Array {
+  return new Float32Array(new Uint8Array(buf).buffer);
 }
 
 function buildSignInput(
@@ -150,10 +160,20 @@ export class SqliteVault implements MemoryVault {
     const limit = options?.limit ?? 10;
     let rows: EntryRow[];
 
-    if (this.embedder && this.vectorAvailable) {
-      const queryEmbedding = await this.embedder(context);
-      const queryBlob = Buffer.from(queryEmbedding.buffer);
-      rows = this.db.prepare(ACTIVE_ENTRIES_VECTOR).all(queryBlob, limit * 2, limit) as EntryRow[];
+    if (this.embedder) {
+      const queryVec = await this.embedder(context);
+      if (!isZeroVector(queryVec)) {
+        const allRows = this.db.prepare(ACTIVE_ENTRIES_WITH_EMBEDDINGS).all() as EntryRowWithEmbedding[];
+        rows = allRows
+          .map(row => ({ row, vec: bufToFloat32(row.embedding) }))
+          .filter(({ vec }) => !isZeroVector(vec))
+          .map(({ row, vec }) => ({ row, score: cosineSimilarity(queryVec, vec) }))
+          .sort((a, b) => b.score - a.score)
+          .slice(0, limit)
+          .map(({ row }) => row);
+      } else {
+        rows = this.db.prepare(ACTIVE_ENTRIES_RECENCY).all(limit) as EntryRow[];
+      }
     } else {
       rows = this.db.prepare(ACTIVE_ENTRIES_RECENCY).all(limit) as EntryRow[];
     }
