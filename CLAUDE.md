@@ -81,6 +81,8 @@ specs/
 - SQLCipher via `SqliteVault` (003-sqlite-vault — no changes) (004-mcp-server)
 - TypeScript 6.x / Node.js 24 LTS + `node:fetch` (built-in, Node 24 — no new package); Ollama (005-semantic-index)
 - `SqliteVault` (003) — no schema changes; `embedding BLOB` column already (005-semantic-index)
+- Markdown + YAML (no runtime language; no Node.js required for + None — skill files are static documents read by the agen (006-skill-files)
+- N/A — skill files delegate all vault operations to the running (006-skill-files)
 
 ## Recent Changes
 - 001-vault-interface: Added TypeScript 5.x / Node.js 24 LTS + None — interface definitions have no runtime dependencies
