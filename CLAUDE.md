@@ -77,6 +77,8 @@ specs/
 - macOS Keychain under `io.agentfriday.vault` (primary); `~/.agent-friday/keys/` at 0600 (fallback) (002-key-custody)
 - TypeScript 5.x / Node.js 24 LTS + `@signalapp/better-sqlite3`, `sqlite-vec` (003-sqlite-vault)
 - SQLCipher database at `~/.agent-friday/vault.db` (path injectable) (003-sqlite-vault)
+- TypeScript 6.x / Node.js 24 LTS + `@modelcontextprotocol/sdk` (McpServer, StdioServerTransport, (004-mcp-server)
+- SQLCipher via `SqliteVault` (003-sqlite-vault — no changes) (004-mcp-server)
 
 ## Recent Changes
 - 001-vault-interface: Added TypeScript 5.x / Node.js 24 LTS + None — interface definitions have no runtime dependencies
