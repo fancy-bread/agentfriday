@@ -33,6 +33,18 @@ export const ACTIVE_ENTRIES_RECENCY = `
   LIMIT ?
 `;
 
+export const ACTIVE_ENTRIES_WITH_EMBEDDINGS = `
+  WITH superseded AS (
+    SELECT previous_id FROM entries
+    WHERE action IN ('amend', 'redact') AND previous_id IS NOT NULL
+  )
+  SELECT id, payload, embedding, created_at, previous_id, action
+  FROM entries
+  WHERE action != 'redact'
+    AND id NOT IN (SELECT previous_id FROM superseded)
+  ORDER BY created_at DESC
+`;
+
 export const ACTIVE_ENTRIES_VECTOR = `
   WITH superseded AS (
     SELECT previous_id FROM entries

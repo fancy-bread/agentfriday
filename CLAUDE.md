@@ -79,6 +79,8 @@ specs/
 - SQLCipher database at `~/.agent-friday/vault.db` (path injectable) (003-sqlite-vault)
 - TypeScript 6.x / Node.js 24 LTS + `@modelcontextprotocol/sdk` (McpServer, StdioServerTransport, (004-mcp-server)
 - SQLCipher via `SqliteVault` (003-sqlite-vault — no changes) (004-mcp-server)
+- TypeScript 6.x / Node.js 24 LTS + `node:fetch` (built-in, Node 24 — no new package); Ollama (005-semantic-index)
+- `SqliteVault` (003) — no schema changes; `embedding BLOB` column already (005-semantic-index)
 
 ## Recent Changes
 - 001-vault-interface: Added TypeScript 5.x / Node.js 24 LTS + None — interface definitions have no runtime dependencies
