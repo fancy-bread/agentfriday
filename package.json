@@ -8,7 +8,8 @@
     "typecheck": "tsc --noEmit",
     "test:contract": "vitest run tests/contract",
     "test:unit": "vitest run tests/unit",
-    "test:integration": "vitest run tests/integration"
+    "test:integration": "vitest run tests/integration",
+    "test:mcp": "vitest run tests/mcp"
   },
   "repository": {
     "type": "git",
@@ -31,13 +32,15 @@
     "node": ">=24"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@signalapp/better-sqlite3": "^9.0.13",
     "@types/better-sqlite3": "^7.6.13",
     "@types/libsodium-wrappers": "^0.7.14",
     "commander": "^14.0.3",
     "keytar": "^7.9.0",
     "libsodium-wrappers": "^0.8.4",
-    "sqlite-vec": "^0.1.9"
+    "sqlite-vec": "^0.1.9",
+    "zod": "^4.4.3"
   },
   "bin": {
     "agent-friday": "dist/cli/index.js"

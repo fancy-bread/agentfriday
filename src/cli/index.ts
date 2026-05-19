@@ -2,7 +2,7 @@
 import { Command } from 'commander';
 import { runInit } from './init.js';
 import { runStatus } from './status.js';
-import { loadKeyOrAbort } from './start.js';
+import { runStart } from './start.js';
 
 const program = new Command();
 
@@ -34,12 +34,11 @@ program
 
 program
   .command('start')
-  .description('Start the MCP server (implemented in 004-mcp-server)')
-  .action(async () => {
+  .description('Start the MCP server over stdio')
+  .option('--vault-path <path>', 'Override default vault database path')
+  .action(async (options: { vaultPath?: string }) => {
     try {
-      await loadKeyOrAbort();
-      console.log('MCP server not yet implemented — see 004-mcp-server.');
-      process.exit(1);
+      await runStart({ vaultPath: options.vaultPath });
     } catch (err) {
       console.error('Error:', (err as Error).message);
       process.exit(1);

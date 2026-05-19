@@ -15,8 +15,8 @@
 
 **Purpose**: Install new dependencies and extend test scripts
 
-- [ ] T001 Install `@modelcontextprotocol/sdk` and `zod` as runtime dependencies via `npm install @modelcontextprotocol/sdk zod`
-- [ ] T002 Add `"test:mcp": "vitest run tests/mcp"` script to `package.json` (alongside existing test:contract, test:unit, test:integration)
+- [x] T001 Install `@modelcontextprotocol/sdk` and `zod` as runtime dependencies via `npm install @modelcontextprotocol/sdk zod`
+- [x] T002 Add `"test:mcp": "vitest run tests/mcp"` script to `package.json` (alongside existing test:contract, test:unit, test:integration)
 
 ---
 
@@ -26,8 +26,8 @@
 
 **⚠️ CRITICAL**: No story implementation can begin until this phase is complete
 
-- [ ] T003 Create `src/mcp/server.ts` — export `createMcpServer(vault: MemoryVault): McpServer` skeleton: import McpServer from `@modelcontextprotocol/sdk/server/mcp.js`, construct with name `"agent-friday"` and version `"1.0.0"`, return server (no tools registered yet)
-- [ ] T004 [P] Create `tests/mcp/helpers/openServer.ts` — export `ServerFixture` interface (`{ client: Client, server: McpServer, vault: SqliteVault, tmpDir: string }`), `openServer(): Promise<ServerFixture>` using `InMemoryTransport.createLinkedPair()` from `@modelcontextprotocol/sdk/inMemory.js` + `openVault()` from `tests/integration/helpers/openVault.js`, and `closeServer(f: ServerFixture): Promise<void>`
+- [x] T003 Create `src/mcp/server.ts` — export `createMcpServer(vault: MemoryVault): McpServer` skeleton: import McpServer from `@modelcontextprotocol/sdk/server/mcp.js`, construct with name `"agent-friday"` and version `"1.0.0"`, return server (no tools registered yet)
+- [x] T004 [P] Create `tests/mcp/helpers/openServer.ts` — export `ServerFixture` interface (`{ client: Client, server: McpServer, vault: SqliteVault, tmpDir: string }`), `openServer(): Promise<ServerFixture>` using `InMemoryTransport.createLinkedPair()` from `@modelcontextprotocol/sdk/inMemory.js` + `openVault()` from `tests/integration/helpers/openVault.js`, and `closeServer(f: ServerFixture): Promise<void>`
 
 **Checkpoint**: `createMcpServer` factory compiles; test helper connects client and server in-process
 
@@ -41,11 +41,11 @@
 
 ### Tests for User Story 5
 
-- [ ] T005 [US5] Create `tests/mcp/server.test.ts` — add `describe('daemon lifecycle')` block using `openServer`/`closeServer`: (1) server connects and client can call `listTools` without error; (2) `closeServer` resolves without throwing (vault closes cleanly)
+- [x] T005 [US5] Create `tests/mcp/server.test.ts` — add `describe('daemon lifecycle')` block using `openServer`/`closeServer`: (1) server connects and client can call `listTools` without error; (2) `closeServer` resolves without throwing (vault closes cleanly)
 
 ### Implementation for User Story 5
 
-- [ ] T006 [US5] Replace stub body of `src/cli/start.ts` `loadKeyOrAbort()` (keep the function) and implement the real `runStart()` body: open vault via `SqliteVault.open()`, call `createMcpServer(vault)`, create `StdioServerTransport` from `@modelcontextprotocol/sdk/server/stdio.js`, register `SIGINT`/`SIGTERM` handlers that call `vault.close()` then `process.exit(0)`, call `await server.connect(transport)`
+- [x] T006 [US5] Replace stub body of `src/cli/start.ts` `loadKeyOrAbort()` (keep the function) and implement the real `runStart()` body: open vault via `SqliteVault.open()`, call `createMcpServer(vault)`, create `StdioServerTransport` from `@modelcontextprotocol/sdk/server/stdio.js`, register `SIGINT`/`SIGTERM` handlers that call `vault.close()` then `process.exit(0)`, call `await server.connect(transport)`
 
 **Checkpoint**: `npm run test:mcp` passes lifecycle tests; `npx agent-friday start` launches and blocks on stdio
 
@@ -59,11 +59,11 @@
 
 ### Tests for User Story 1
 
-- [ ] T007 [US1] Add `describe('memory_append')` block to `tests/mcp/server.test.ts`: (1) valid content returns `{ id }` as non-empty string; (2) empty content returns isError response with server still running after the error
+- [x] T007 [US1] Add `describe('memory_append')` block to `tests/mcp/server.test.ts`: (1) valid content returns `{ id }` as non-empty string; (2) empty content returns isError response with server still running after the error
 
 ### Implementation for User Story 1
 
-- [ ] T008 [US1] Add `memory_append` tool to `createMcpServer` in `src/mcp/server.ts`: register with `server.tool('memory_append', { content: z.string().min(1) }, async ({ content }) => { ... })`, call `vault.append(content as EntryId extends string ... )`, return `{ content: [{ type: 'text', text: JSON.stringify({ id }) }] }` — import `z` from `zod`
+- [x] T008 [US1] Add `memory_append` tool to `createMcpServer` in `src/mcp/server.ts`: register with `server.tool('memory_append', { content: z.string().min(1) }, async ({ content }) => { ... })`, call `vault.append(content as EntryId extends string ... )`, return `{ content: [{ type: 'text', text: JSON.stringify({ id }) }] }` — import `z` from `zod`
 
 **Checkpoint**: `npm run test:mcp` passes; calling `memory_append` via MCP inspector returns a UUID
 
@@ -77,11 +77,11 @@
 
 ### Tests for User Story 2
 
-- [ ] T009 [US2] Add `describe('memory_query')` block to `tests/mcp/server.test.ts`: (1) after appending an entry, query returns non-empty entries array with correct fields (`id`, `content`, `createdAt`, `action`); (2) empty vault returns `{ entries: [] }` without error; (3) `limit` parameter caps result count
+- [x] T009 [US2] Add `describe('memory_query')` block to `tests/mcp/server.test.ts`: (1) after appending an entry, query returns non-empty entries array with correct fields (`id`, `content`, `createdAt`, `action`); (2) empty vault returns `{ entries: [] }` without error; (3) `limit` parameter caps result count
 
 ### Implementation for User Story 2
 
-- [ ] T010 [US2] Add `memory_query` tool to `createMcpServer` in `src/mcp/server.ts`: register with `server.tool('memory_query', { context: z.string().min(1), limit: z.number().int().min(1).optional() }, async ({ context, limit }) => { ... })`, call `vault.query(context, { limit })`, return `{ content: [{ type: 'text', text: JSON.stringify({ entries }) }] }`
+- [x] T010 [US2] Add `memory_query` tool to `createMcpServer` in `src/mcp/server.ts`: register with `server.tool('memory_query', { context: z.string().min(1), limit: z.number().int().min(1).optional() }, async ({ context, limit }) => { ... })`, call `vault.query(context, { limit })`, return `{ content: [{ type: 'text', text: JSON.stringify({ entries }) }] }`
 
 **Checkpoint**: `npm run test:mcp` passes; P1 user stories (US1, US2, US5) fully functional
 
@@ -95,11 +95,11 @@
 
 ### Tests for User Story 3
 
-- [ ] T011 [US3] Add `describe('memory_amend')` block to `tests/mcp/server.test.ts`: (1) valid id + content returns new `{ id }` different from original; (2) amended entry appears in query results, original does not; (3) unknown id returns isError response, server still running
+- [x] T011 [US3] Add `describe('memory_amend')` block to `tests/mcp/server.test.ts`: (1) valid id + content returns new `{ id }` different from original; (2) amended entry appears in query results, original does not; (3) unknown id returns isError response, server still running
 
 ### Implementation for User Story 3
 
-- [ ] T012 [US3] Add `memory_amend` tool to `createMcpServer` in `src/mcp/server.ts`: register with `server.tool('memory_amend', { id: z.string(), content: z.string().min(1) }, async ({ id, content }) => { ... })`, cast `id` to `EntryId`, call `vault.amend(id, content)`, return `{ content: [{ type: 'text', text: JSON.stringify({ id: newId }) }] }`
+- [x] T012 [US3] Add `memory_amend` tool to `createMcpServer` in `src/mcp/server.ts`: register with `server.tool('memory_amend', { id: z.string(), content: z.string().min(1) }, async ({ id, content }) => { ... })`, cast `id` to `EntryId`, call `vault.amend(id, content)`, return `{ content: [{ type: 'text', text: JSON.stringify({ id: newId }) }] }`
 
 **Checkpoint**: `npm run test:mcp` passes; amend flow works end-to-end
 
@@ -113,11 +113,11 @@
 
 ### Tests for User Story 4
 
-- [ ] T013 [US4] Add `describe('memory_redact')` block to `tests/mcp/server.test.ts`: (1) valid id returns new `{ id }` (redaction record); (2) redacted entry does not appear in subsequent `memory_query` results; (3) optional reason accepted without error; (4) unknown id returns isError response, server still running
+- [x] T013 [US4] Add `describe('memory_redact')` block to `tests/mcp/server.test.ts`: (1) valid id returns new `{ id }` (redaction record); (2) redacted entry does not appear in subsequent `memory_query` results; (3) optional reason accepted without error; (4) unknown id returns isError response, server still running
 
 ### Implementation for User Story 4
 
-- [ ] T014 [US4] Add `memory_redact` tool to `createMcpServer` in `src/mcp/server.ts`: register with `server.tool('memory_redact', { id: z.string(), reason: z.string().optional() }, async ({ id, reason }) => { ... })`, cast `id` to `EntryId`, call `vault.redact(id, reason)`, return `{ content: [{ type: 'text', text: JSON.stringify({ id: redactId }) }] }`
+- [x] T014 [US4] Add `memory_redact` tool to `createMcpServer` in `src/mcp/server.ts`: register with `server.tool('memory_redact', { id: z.string(), reason: z.string().optional() }, async ({ id, reason }) => { ... })`, cast `id` to `EntryId`, call `vault.redact(id, reason)`, return `{ content: [{ type: 'text', text: JSON.stringify({ id: redactId }) }] }`
 
 **Checkpoint**: `npm run test:mcp` passes; all four tools functional
 
@@ -131,7 +131,7 @@
 
 ### Tests for User Story 6
 
-- [ ] T015 [US6] Add `describe('tool metadata')` block to `tests/mcp/server.test.ts`: call `client.listTools()`, assert response contains exactly four tools named `memory_append`, `memory_query`, `memory_amend`, `memory_redact`; each has a non-empty `description` and an `inputSchema` with at least one required property
+- [x] T015 [US6] Add `describe('tool metadata')` block to `tests/mcp/server.test.ts`: call `client.listTools()`, assert response contains exactly four tools named `memory_append`, `memory_query`, `memory_amend`, `memory_redact`; each has a non-empty `description` and an `inputSchema` with at least one required property
 
 ---
 
@@ -139,10 +139,10 @@
 
 **Purpose**: End-to-end sequence test, typecheck, and final validation
 
-- [ ] T016 Add `describe('full sequence')` block to `tests/mcp/server.test.ts`: append entry → query (entry present) → amend (old absent, new present) → redact → query (entry absent); verify daemon remains running throughout
-- [ ] T017 [P] Run `npm run typecheck` — fix any TypeScript errors in `src/mcp/server.ts`, `src/cli/start.ts`, and `tests/mcp/`
-- [ ] T018 [P] Run `npm test` — all suites pass (contract, unit, integration, mcp)
-- [ ] T019 Run quickstart.md validation: `npx agent-friday init` (if not already done) then `npx agent-friday start` launches without error; verify MCP Inspector can connect and call all four tools
+- [x] T016 Add `describe('full sequence')` block to `tests/mcp/server.test.ts`: append entry → query (entry present) → amend (old absent, new present) → redact → query (entry absent); verify daemon remains running throughout
+- [x] T017 [P] Run `npm run typecheck` — fix any TypeScript errors in `src/mcp/server.ts`, `src/cli/start.ts`, and `tests/mcp/`
+- [x] T018 [P] Run `npm test` — all suites pass (contract, unit, integration, mcp)
+- [x] T019 Run quickstart.md validation: `npx agent-friday init` (if not already done) then `npx agent-friday start` launches without error; verify MCP Inspector can connect and call all four tools
 
 ---
 
