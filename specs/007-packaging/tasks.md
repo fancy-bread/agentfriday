@@ -24,9 +24,9 @@ Without this, US1–US4 cannot be accessed via the published package.
 
 **⚠️ CRITICAL**: All user story implementation depends on the build being correct.
 
-- [ ] T001 [P] Create `tsconfig.build.json` at repository root — content: `{ "extends": "./tsconfig.json", "compilerOptions": { "rootDir": "src", "outDir": "dist", "types": ["node"] }, "include": ["src/**/*"], "exclude": ["node_modules", "dist", "tests"] }`
-- [ ] T002 [P] Update `package.json` — add `"build": "tsc -p tsconfig.build.json"` and `"prepare": "npm run build"` to scripts; add `"files": ["dist/", "skills/", "README.md"]` field alongside existing fields
-- [ ] T003 Run `npm run build` after T001+T002 complete — verify `dist/cli/index.js` exists and `node dist/cli/index.js --help` prints the CLI help without error
+- [x] T001 [P] Create `tsconfig.build.json` at repository root — content: `{ "extends": "./tsconfig.json", "compilerOptions": { "rootDir": "src", "outDir": "dist", "types": ["node"] }, "include": ["src/**/*"], "exclude": ["node_modules", "dist", "tests"] }`
+- [x] T002 [P] Update `package.json` — add `"build": "tsc -p tsconfig.build.json"` and `"prepare": "npm run build"` to scripts; add `"files": ["dist/", "skills/", "README.md"]` field alongside existing fields
+- [x] T003 Run `npm run build` after T001+T002 complete — verify `dist/cli/index.js` exists and `node dist/cli/index.js --help` prints the CLI help without error
 
 **Checkpoint**: `dist/cli/index.js` exists; `node dist/cli/index.js --help` succeeds
 
@@ -40,13 +40,13 @@ Without this, US1–US4 cannot be accessed via the published package.
 
 ### Tests for User Story 1
 
-- [ ] T004 [P] [US1] Write `tests/integration/init-integration.test.ts` — import `installSkills` from `../../src/integration/claude.js`; test with temp source dir (create 4 `friday-*/SKILL.md` stub files) and temp target dir: (1) all 4 skills copied to target; (2) target dir created if absent; (3) re-run overwrites existing files (idempotency); (4) `checkSkills(targetDir)` returns true after install, false before
+- [x] T004 [P] [US1] Write `tests/integration/init-integration.test.ts` — import `installSkills` from `../../src/integration/claude.js`; test with temp source dir (create 4 `friday-*/SKILL.md` stub files) and temp target dir: (1) all 4 skills copied to target; (2) target dir created if absent; (3) re-run overwrites existing files (idempotency); (4) `checkSkills(targetDir)` returns true after install, false before
 
 ### Implementation for User Story 1
 
-- [ ] T005 [US1] Create `src/integration/claude.ts` — export: `SKILL_NAMES: string[]` (the 4 skill directory names); `async installSkills(skillsSourceDir: string, claudeSkillsDir: string): Promise<void>` (copies each `skillsSourceDir/<name>/SKILL.md` to `claudeSkillsDir/<name>/SKILL.md`, creating dirs with `{ recursive: true }`); `registerMcp(): { method: 'cli' | 'manual'; snippet?: string }` (tries `execSync('claude mcp add agent-friday -- npx agent-friday start', { stdio: 'pipe', timeout: 10000 })`, returns `{ method: 'cli' }` on success or `{ method: 'manual', snippet: JSON.stringify({ mcpServers: { 'agent-friday': { command: 'npx', args: ['agent-friday', 'start'] } } }, null, 2) }` on failure); `checkSkills(claudeSkillsDir: string): boolean` (returns true if all 4 `<claudeSkillsDir>/<name>/SKILL.md` exist); `checkMcpRegistered(): boolean | 'unknown'` (runs `claude mcp list`, returns true if output includes `agent-friday`, false if it doesn't, `'unknown'` if command throws)
-- [ ] T006 [US1] Update `runInit()` in `src/cli/init.ts` — change signature to `runInit(options: { vaultPath?: string; integration?: string } = {})`: after existing vault+key setup, if `options.integration === 'claude'`, resolve `skillsSourceDir` via `path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', 'skills')` (3 levels up from `dist/cli/init.js` → package root, then `skills/`), resolve `claudeSkillsDir` to `path.join(os.homedir(), '.claude', 'skills')`, call `await installSkills(skillsSourceDir, claudeSkillsDir)`, call `registerMcp()`, print skills path and MCP registration result; add `import { fileURLToPath } from 'url'` and import from `../integration/claude.js`
-- [ ] T007 [US1] Update `src/cli/index.ts` — add `.option('--integration <tool>', 'Install skills and register MCP for the specified AI tool (claude)')` to the `init` command; pass `{ vaultPath: options.vaultPath, integration: options.integration }` to `runInit()`
+- [x] T005 [US1] Create `src/integration/claude.ts` — export: `SKILL_NAMES: string[]` (the 4 skill directory names); `async installSkills(skillsSourceDir: string, claudeSkillsDir: string): Promise<void>` (copies each `skillsSourceDir/<name>/SKILL.md` to `claudeSkillsDir/<name>/SKILL.md`, creating dirs with `{ recursive: true }`); `registerMcp(): { method: 'cli' | 'manual'; snippet?: string }` (tries `execSync('claude mcp add agent-friday -- npx agent-friday start', { stdio: 'pipe', timeout: 10000 })`, returns `{ method: 'cli' }` on success or `{ method: 'manual', snippet: JSON.stringify({ mcpServers: { 'agent-friday': { command: 'npx', args: ['agent-friday', 'start'] } } }, null, 2) }` on failure); `checkSkills(claudeSkillsDir: string): boolean` (returns true if all 4 `<claudeSkillsDir>/<name>/SKILL.md` exist); `checkMcpRegistered(): boolean | 'unknown'` (runs `claude mcp list`, returns true if output includes `agent-friday`, false if it doesn't, `'unknown'` if command throws)
+- [x] T006 [US1] Update `runInit()` in `src/cli/init.ts` — change signature to `runInit(options: { vaultPath?: string; integration?: string } = {})`: after existing vault+key setup, if `options.integration === 'claude'`, resolve `skillsSourceDir` via `path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', 'skills')` (3 levels up from `dist/cli/init.js` → package root, then `skills/`), resolve `claudeSkillsDir` to `path.join(os.homedir(), '.claude', 'skills')`, call `await installSkills(skillsSourceDir, claudeSkillsDir)`, call `registerMcp()`, print skills path and MCP registration result; add `import { fileURLToPath } from 'url'` and import from `../integration/claude.js`
+- [x] T007 [US1] Update `src/cli/index.ts` — add `.option('--integration <tool>', 'Install skills and register MCP for the specified AI tool (claude)')` to the `init` command; pass `{ vaultPath: options.vaultPath, integration: options.integration }` to `runInit()`
 
 **Checkpoint**: `node dist/cli/index.js init --integration claude` (after rebuild) installs skills to `~/.claude/skills/` and prints MCP status
 
@@ -62,7 +62,7 @@ Without this, US1–US4 cannot be accessed via the published package.
 
 No new implementation — US2 is satisfied by the build fix (Phase 2) and US1 implementation (Phase 3). The `package.json` `bin` field already declares `dist/cli/index.js`; after the build fix this path exists and `npx` resolves it correctly.
 
-- [ ] T008 [P] [US2] Verify `npx` resolution: after Phase 2 and Phase 3 complete, run `npm pack --dry-run` and confirm `dist/cli/index.js` and `skills/friday-*/SKILL.md` files appear in the packed contents; confirm no `specs/`, `tests/`, or `.specify/` files are included
+- [x] T008 [P] [US2] Verify `npx` resolution: after Phase 2 and Phase 3 complete, run `npm pack --dry-run` and confirm `dist/cli/index.js` and `skills/friday-*/SKILL.md` files appear in the packed contents; confirm no `specs/`, `tests/`, or `.specify/` files are included
 
 **Checkpoint**: `npm pack --dry-run` output contains only `dist/`, `skills/`, `README.md`, `package.json`
 
@@ -76,7 +76,7 @@ No new implementation — US2 is satisfied by the build fix (Phase 2) and US1 im
 
 ### Implementation for User Story 3
 
-- [ ] T009 [US3] Update `src/cli/status.ts` — import `checkSkills`, `checkMcpRegistered` from `../integration/claude.js`; import `os` and `path`; after existing key+vault rows, resolve `claudeSkillsDir = path.join(os.homedir(), '.claude', 'skills')`; add Skills row: `checkSkills(claudeSkillsDir)` → `✓  ~/.claude/skills/ (4 installed)` or `✗  not installed  →  run: agent-friday init --integration claude`; add MCP row: `checkMcpRegistered()` → `✓  agent-friday registered with Claude Code` / `✗  not registered  →  run: agent-friday init --integration claude` / `?  unknown (claude CLI not found)` — MCP/Skills rows do NOT affect `process.exitCode`
+- [x] T009 [US3] Update `src/cli/status.ts` — import `checkSkills`, `checkMcpRegistered` from `../integration/claude.js`; import `os` and `path`; after existing key+vault rows, resolve `claudeSkillsDir = path.join(os.homedir(), '.claude', 'skills')`; add Skills row: `checkSkills(claudeSkillsDir)` → `✓  ~/.claude/skills/ (4 installed)` or `✗  not installed  →  run: agent-friday init --integration claude`; add MCP row: `checkMcpRegistered()` → `✓  agent-friday registered with Claude Code` / `✗  not registered  →  run: agent-friday init --integration claude` / `?  unknown (claude CLI not found)` — MCP/Skills rows do NOT affect `process.exitCode`
 
 **Checkpoint**: `node dist/cli/index.js status` shows 4 rows; Skills and MCP rows reflect actual state
 
@@ -92,10 +92,10 @@ No implementation tasks — `runStart()` is complete. Covered by Phase 2 build f
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T010 [P] Run `npm run typecheck` — fix any TypeScript errors across `src/integration/claude.ts`, `src/cli/init.ts`, `src/cli/index.ts`, `src/cli/status.ts`
-- [ ] T011 [P] Run `npm test` — all suites pass including new `tests/integration/init-integration.test.ts`
-- [ ] T012 [P] Write `README.md` at repository root — include: one-line description ("Local encrypted memory for AI agents"), prerequisites (Node 24, Ollama optional), install + setup section (`npx agent-friday init --integration claude`), the four `/friday-*` commands with one-line descriptions, `agent-friday status` and `agent-friday start` usage, brief architecture note (local daemon, SQLCipher vault, keys never leave device), link to agentskills.io for skill format reference; keep it under 100 lines — quickstart focus, not exhaustive docs
-- [ ] T013 Run full quickstart validation per `specs/007-packaging/quickstart.md`: rebuild, run `node dist/cli/index.js init --integration claude` (with a fresh temp vault using `--vault-path`), run `node dist/cli/index.js status`, confirm output matches expected format
+- [x] T010 [P] Run `npm run typecheck` — fix any TypeScript errors across `src/integration/claude.ts`, `src/cli/init.ts`, `src/cli/index.ts`, `src/cli/status.ts`
+- [x] T011 [P] Run `npm test` — all suites pass including new `tests/integration/init-integration.test.ts`
+- [x] T012 [P] Write `README.md` at repository root — include: one-line description ("Local encrypted memory for AI agents"), prerequisites (Node 24, Ollama optional), install + setup section (`npx agent-friday init --integration claude`), the four `/friday-*` commands with one-line descriptions, `agent-friday status` and `agent-friday start` usage, brief architecture note (local daemon, SQLCipher vault, keys never leave device), link to agentskills.io for skill format reference; keep it under 100 lines — quickstart focus, not exhaustive docs
+- [x] T013 Run full quickstart validation per `specs/007-packaging/quickstart.md`: rebuild, run `node dist/cli/index.js init --integration claude` (with a fresh temp vault using `--vault-path`), run `node dist/cli/index.js status`, confirm output matches expected format
 
 ---
 

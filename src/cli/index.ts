@@ -9,15 +9,16 @@ const program = new Command();
 program
   .name('agent-friday')
   .description('Private encrypted memory service for AI agents')
-  .version('1.0.0');
+  .version('0.1.0');
 
 program
   .command('init')
   .description('Initialise the vault and generate a keypair')
   .option('--vault-path <path>', 'Override default vault database path')
-  .action(async (options: { vaultPath?: string }) => {
+  .option('--integration <tool>', 'Install skills and register MCP for the specified AI tool (claude)')
+  .action(async (options: { vaultPath?: string; integration?: string }) => {
     try {
-      await runInit({ vaultPath: options.vaultPath });
+      await runInit({ vaultPath: options.vaultPath, integration: options.integration });
     } catch (err) {
       console.error('Error:', (err as Error).message);
       process.exit(1);

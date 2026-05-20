@@ -8,7 +8,7 @@ function text(payload: unknown): { content: [{ type: 'text'; text: string }] } {
 }
 
 export function createMcpServer(vault: MemoryVault): McpServer {
-  const server = new McpServer({ name: 'agent-friday', version: '1.0.0' });
+  const server = new McpServer({ name: 'agent-friday', version: '0.1.0' });
 
   server.registerTool(
     'memory_append',
