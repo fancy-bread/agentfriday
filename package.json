@@ -1,9 +1,11 @@
 {
   "name": "agentfriday",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Trusted agent assistant with immutable secreted memory.",
   "main": "index.js",
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepare": "npm run build",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "test:contract": "vitest run tests/contract",
@@ -11,6 +13,11 @@
     "test:integration": "vitest run tests/integration",
     "test:mcp": "vitest run tests/mcp"
   },
+  "files": [
+    "dist/",
+    "skills/",
+    "README.md"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/fancy-bread/agentfriday.git"

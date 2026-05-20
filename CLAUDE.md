@@ -83,6 +83,8 @@ specs/
 - `SqliteVault` (003) — no schema changes; `embedding BLOB` column already (005-semantic-index)
 - Markdown + YAML (no runtime language; no Node.js required for + None — skill files are static documents read by the agen (006-skill-files)
 - N/A — skill files delegate all vault operations to the running (006-skill-files)
+- TypeScript 6.x / Node.js 24 LTS + `child_process` (built-in — for `claude mcp add`); (007-packaging)
+- N/A — no vault changes (007-packaging)
 
 ## Recent Changes
 - 001-vault-interface: Added TypeScript 5.x / Node.js 24 LTS + None — interface definitions have no runtime dependencies
