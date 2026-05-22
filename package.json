@@ -1,6 +1,6 @@
 {
   "name": "agentfriday",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Trusted agent assistant with immutable secreted memory.",
   "main": "index.js",
   "scripts": {

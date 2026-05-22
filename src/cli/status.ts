@@ -4,7 +4,8 @@ import os from 'os';
 import { resolveBackend } from '../keys/platform.js';
 import { fingerprint } from '../keys/crypto.js';
 import type { StorageType } from '../keys/KeyManager.js';
-import { checkSkills, checkMcpRegistered } from '../integration/claude.js';
+import { checkSkills } from '../integration/claude.js';
+import { INTEGRATIONS } from '../integration/registry.js';
 
 export interface StatusResult {
   fingerprint: string | null;
@@ -15,9 +16,7 @@ export interface StatusResult {
 }
 
 const DEFAULT_VAULT_PATH = path.join(os.homedir(), '.agent-friday', 'vault.db');
-const CLAUDE_SKILLS_DIR = path.join(os.homedir(), '.claude', 'skills');
-
-const HINT = '  →  run: agent-friday init --integration claude';
+const AGENTS_SKILLS_DIR = path.join(os.homedir(), '.agents', 'skills');
 
 export async function runStatus(options: { vaultPath?: string; keyPath?: string } = {}): Promise<StatusResult> {
   const backend = resolveBackend();
@@ -55,28 +54,32 @@ export async function runStatus(options: { vaultPath?: string; keyPath?: string 
     ? 'Keychain (software-protected)'
     : 'Software key (file-protected)';
 
-  const skillsOk = checkSkills(CLAUDE_SKILLS_DIR);
-  const mcpState = checkMcpRegistered();
-
+  const skillsOk = checkSkills(AGENTS_SKILLS_DIR);
+  const skillsHint = '  →  run: agent-friday configure --integration <tool>';
   const skillsRow = skillsOk
-    ? `✓  ${CLAUDE_SKILLS_DIR} (4 installed)`
-    : `✗  not installed${HINT}`;
+    ? `✓  ${AGENTS_SKILLS_DIR} (4 installed)`
+    : `✗  not installed${skillsHint}`;
 
-  let mcpRow: string;
-  if (mcpState === 'unknown') {
-    mcpRow = '?  unknown (claude CLI not found)';
-  } else if (mcpState) {
-    mcpRow = '✓  agent-friday registered with Claude Code';
-  } else {
-    mcpRow = `✗  not registered${HINT}`;
-  }
+  const vaultHint = '  →  run: agent-friday init';
 
   console.log('Agent Friday');
   console.log('────────────────────────────────────────────────────────────');
   console.log(`Key      ✓  ${fp}  (${storageLabel})`);
-  console.log(`Vault    ${chainIntact ? `✓  ${vaultPath}` : `✗  not found${HINT.replace('init --integration claude', 'init')}`}`);
+  console.log(`Vault    ${chainIntact ? `✓  ${vaultPath}` : `✗  not found${vaultHint}`}`);
   console.log(`Skills   ${skillsRow}`);
-  console.log(`MCP      ${mcpRow}`);
+
+  for (const integration of Object.values(INTEGRATIONS)) {
+    const state = await integration.checkMcpRegistered();
+    let mcpRow: string;
+    if (state === 'unknown') {
+      mcpRow = '?  unknown (integration tooling not found)';
+    } else if (state) {
+      mcpRow = '✓  registered';
+    } else {
+      mcpRow = `✗  not registered  →  run: agent-friday configure --integration ${integration.name}`;
+    }
+    console.log(`MCP (${integration.displayName})   ${mcpRow}`);
+  }
 
   return { fingerprint: fp, storageType, vaultPath, keyAccessible, chainIntact };
 }
