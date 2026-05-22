@@ -85,6 +85,7 @@ specs/
 - N/A — skill files delegate all vault operations to the running (006-skill-files)
 - TypeScript 6.x / Node.js 24 LTS + `child_process` (built-in — for `claude mcp add`); (007-packaging)
 - N/A — no vault changes (007-packaging)
+- TypeScript 6.x / Node.js 24 LTS + `fs/promises` (built-in — for Cursor MCP JSON read/write); (008-multi-integration)
 
 ## Recent Changes
 - 001-vault-interface: Added TypeScript 5.x / Node.js 24 LTS + None — interface definitions have no runtime dependencies
