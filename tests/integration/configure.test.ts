@@ -4,7 +4,7 @@ import { existsSync } from 'fs';
 import path from 'path';
 import os from 'os';
 import { SoftwareKeyManager } from '../../src/keys/SoftwareKeyManager.js';
-import { runConfigure } from '../../src/cli/configure.js';
+import { runConfigure, injectAgentsMd } from '../../src/cli/configure.js';
 import { registerCursorMcp, checkCursorMcpRegistered } from '../../src/integration/cursor.js';
 import { SKILL_NAMES } from '../../src/integration/claude.js';
 
@@ -137,5 +137,74 @@ describe('registerCursorMcp', () => {
   it('checkCursorMcpRegistered returns true after registration', async () => {
     await registerCursorMcp(mcpPath);
     expect(await checkCursorMcpRegistered(mcpPath)).toBe(true);
+  });
+});
+
+describe('injectAgentsMd', () => {
+  let tmpDir: string;
+  let agentsMdPath: string;
+  let assetsDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await mkdtemp(path.join(os.tmpdir(), 'af-inject-'));
+    agentsMdPath = path.join(tmpDir, 'AGENTS.md');
+    assetsDir = path.join(tmpDir, 'assets');
+    await mkdir(assetsDir);
+    await writeFile(path.join(assetsDir, 'agents.md'), '## Friday\nTest content.\n');
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('creates AGENTS.md when absent with Friday section', async () => {
+    await injectAgentsMd(agentsMdPath, assetsDir);
+    expect(existsSync(agentsMdPath)).toBe(true);
+    const content = await readFile(agentsMdPath, 'utf-8');
+    expect(content).toContain('<!-- agent-friday:start -->');
+    expect(content).toContain('<!-- agent-friday:version:1 -->');
+    expect(content).toContain('<!-- agent-friday:end -->');
+    expect(content).toContain('## Friday');
+  });
+
+  it('appends Friday section to existing AGENTS.md preserving prior content', async () => {
+    await writeFile(agentsMdPath, '# Project Rules\n\nDo not break things.\n');
+    await injectAgentsMd(agentsMdPath, assetsDir);
+    const content = await readFile(agentsMdPath, 'utf-8');
+    expect(content).toContain('# Project Rules');
+    expect(content).toContain('Do not break things.');
+    expect(content).toContain('<!-- agent-friday:start -->');
+    expect(content).toContain('## Friday');
+  });
+
+  it('replaces existing Friday section on re-run without duplication', async () => {
+    await injectAgentsMd(agentsMdPath, assetsDir);
+    await injectAgentsMd(agentsMdPath, assetsDir);
+    const content = await readFile(agentsMdPath, 'utf-8');
+    const startCount = (content.match(/<!-- agent-friday:start -->/g) ?? []).length;
+    const endCount = (content.match(/<!-- agent-friday:end -->/g) ?? []).length;
+    expect(startCount).toBe(1);
+    expect(endCount).toBe(1);
+  });
+
+  it('preserves content outside markers when replacing', async () => {
+    await writeFile(agentsMdPath, '# Project Rules\n\nDo not break things.\n');
+    await injectAgentsMd(agentsMdPath, assetsDir);
+    await writeFile(path.join(assetsDir, 'agents.md'), '## Friday\nUpdated content.\n');
+    await injectAgentsMd(agentsMdPath, assetsDir);
+    const content = await readFile(agentsMdPath, 'utf-8');
+    expect(content).toContain('# Project Rules');
+    expect(content).toContain('Updated content.');
+    expect(content).not.toContain('Test content.');
+  });
+
+  it('produces identical output for claude and cursor (same utility)', async () => {
+    const pathA = path.join(tmpDir, 'AGENTS-claude.md');
+    const pathB = path.join(tmpDir, 'AGENTS-cursor.md');
+    await injectAgentsMd(pathA, assetsDir);
+    await injectAgentsMd(pathB, assetsDir);
+    const contentA = await readFile(pathA, 'utf-8');
+    const contentB = await readFile(pathB, 'utf-8');
+    expect(contentA).toBe(contentB);
   });
 });
