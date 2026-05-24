@@ -16,9 +16,9 @@
 
 **⚠️ CRITICAL**: US2 MCP work cannot begin until this phase is complete.
 
-- [ ] T001 Add `RecentEntry`, `RecentResult` types and `listRecent(limit: number, offset: number): Promise<RecentResult>` to `src/vault/MemoryVault.ts`
-- [ ] T002 Implement `listRecent` in `src/vault/SqliteVault.ts` — SELECT with `superseded_by IS NULL AND redacted_at IS NULL`, ORDER BY `created_at DESC`, LIMIT/OFFSET; count query for total
-- [ ] T003 Integration test for `listRecent` in `tests/integration/` — covers: pagination (limit/offset), superseded exclusion, redacted exclusion, empty vault returns `{ entries: [], total: 0 }`
+- [x] T001 Add `RecentEntry`, `RecentResult` types and `listRecent(limit: number, offset: number): Promise<RecentResult>` to `src/vault/MemoryVault.ts`
+- [x] T002 Implement `listRecent` in `src/vault/SqliteVault.ts` — SELECT with `superseded_by IS NULL AND redacted_at IS NULL`, ORDER BY `created_at DESC`, LIMIT/OFFSET; count query for total
+- [x] T003 Integration test for `listRecent` in `tests/integration/` — covers: pagination (limit/offset), superseded exclusion, redacted exclusion, empty vault returns `{ entries: [], total: 0 }`
 
 **Checkpoint**: `MemoryVault` interface extended; `SqliteVault` implements `listRecent`; integration tests pass against real SQLCipher
 
@@ -30,10 +30,10 @@
 
 **Independent Test**: From a project root, run `agent-friday configure --integration claude`. Confirm Friday section appended to `./AGENTS.md` between markers; existing content preserved. Re-run — section replaced not duplicated. Repeat with `--integration cursor` — confirm identical result. Open a session, make a decision, confirm approval prompt surfaces.
 
-- [ ] T004 [US1] Author `src/assets/agents.md` — role declaration, judgment criteria (decisions / constraints / resolved ambiguities / changed assumptions), exclusion criteria (remarks / questions / status updates), approval pattern ("Should I remember: [content]? Yes / No / Edit"), tool bindings (`memory_append`, `memory_recent`)
-- [ ] T005 [US1] Implement shared inject utility in `src/cli/configure.ts`: read `src/assets/agents.md`, wrap in idempotency markers (`<!-- agent-friday:start -->` / `<!-- agent-friday:version:1 -->` / `<!-- agent-friday:end -->`), append to or replace marked section in `./AGENTS.md` at CWD (create file if absent) — depends on T004
-- [ ] T006 [US3] Wire both claude and cursor handlers in `src/cli/configure.ts` to call the shared inject utility — no tool-specific injection logic; integration-specific behaviour limited to skill installation path
-- [ ] T007 [US1] Integration test in `tests/integration/` — existing `./AGENTS.md`: Friday section appended, prior content preserved; no `./AGENTS.md`: file created with Friday section only; re-run: section replaced not duplicated
+- [x] T004 [US1] Author `src/assets/agents.md` — role declaration, judgment criteria (decisions / constraints / resolved ambiguities / changed assumptions), exclusion criteria (remarks / questions / status updates), approval pattern ("Should I remember: [content]? Yes / No / Edit"), tool bindings (`memory_append`, `memory_recent`)
+- [x] T005 [US1] Implement shared inject utility in `src/cli/configure.ts`: read `src/assets/agents.md`, wrap in idempotency markers (`<!-- agent-friday:start -->` / `<!-- agent-friday:version:1 -->` / `<!-- agent-friday:end -->`), append to or replace marked section in `./AGENTS.md` at CWD (create file if absent) — depends on T004
+- [x] T006 [US3] Wire both claude and cursor handlers in `src/cli/configure.ts` to call the shared inject utility — no tool-specific injection logic; integration-specific behaviour limited to skill installation path
+- [x] T007 [US1] Integration test in `tests/integration/` — existing `./AGENTS.md`: Friday section appended, prior content preserved; no `./AGENTS.md`: file created with Friday section only; re-run: section replaced not duplicated
 
 **Checkpoint**: US1 + US3 fully functional — any project using Claude Code or Cursor has Friday behavior after `agent-friday configure`
 
@@ -47,11 +47,11 @@
 
 **Prerequisite**: T001–T003 (Foundational) must be complete.
 
-- [ ] T008 [P] [US2] Author `src/mcp/tools/memory-recent.ts` — input validation (limit 1–50, offset ≥ 0), call `vault.listRecent()`, return `RecentResult`; handle empty vault and tool errors
-- [ ] T009 [US2] Register `memory_recent` tool in MCP server (`src/mcp/server.ts` or equivalent tool registry) — depends on T008
-- [ ] T010 [US2] End-to-end test in `tests/integration/` — `memory_recent` tool call against running server: pagination, empty vault, out-of-range limit returns tool error; verify response time for 1,000-entry vault meets SC-004 (under 2 seconds)
-- [ ] T011 [P] [US2] Author `skills/friday-review/SKILL.md` per `specs/009-friday-hooks/contracts/friday-review.md` — role, steps (call `memory_recent`, display list, pagination, correction prompt), error handling
-- [ ] T012 [US2] Update configure handlers (claude + cursor) in `src/cli/configure.ts` to install `friday-review` skill alongside existing skills — no new command required
+- [x] T008 [P] [US2] Author `src/mcp/tools/memory-recent.ts` — input validation (limit 1–50, offset ≥ 0), call `vault.listRecent()`, return `RecentResult`; handle empty vault and tool errors
+- [x] T009 [US2] Register `memory_recent` tool in MCP server (`src/mcp/server.ts` or equivalent tool registry) — depends on T008
+- [x] T010 [US2] End-to-end test in `tests/integration/` — `memory_recent` tool call against running server: pagination, empty vault, out-of-range limit returns tool error; verify response time for 1,000-entry vault meets SC-004 (under 2 seconds)
+- [x] T011 [P] [US2] Author `skills/friday-review/SKILL.md` per `specs/009-friday-hooks/contracts/friday-review.md` — role, steps (call `memory_recent`, display list, pagination, correction prompt), error handling
+- [x] T012 [US2] Update configure handlers (claude + cursor) in `src/cli/configure.ts` to install `friday-review` skill alongside existing skills — no new command required
 
 **Checkpoint**: US2 complete — full capture-review-correct loop functional: Friday proposes → user approves → user reviews → user amends
 
@@ -59,7 +59,7 @@
 
 ## Phase 4: Polish & Cross-Cutting Concerns
 
-- [ ] T013 [P] Update `CLAUDE.md` Active Technologies section: add `src/assets/agents.md` (static content, no runtime deps) for 009-friday-hooks
+- [x] T013 [P] Update `CLAUDE.md` Active Technologies section: add `src/assets/agents.md` (static content, no runtime deps) for 009-friday-hooks
 - [ ] T014 Run quickstart.md validation — smoke test per-project injection for both integrations; confirm both produce identical `./AGENTS.md` output; confirm Cursor and Claude Code sessions both surface approval prompt
 
 ---

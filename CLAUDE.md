@@ -88,6 +88,7 @@ specs/
 - TypeScript 6.x / Node.js 24 LTS + `fs/promises` (built-in — for Cursor MCP JSON read/write); (008-multi-integration)
 - TypeScript 6.x / Node.js 24 LTS + `@modelcontextprotocol/sdk`, `@signalapp/better-sqlite3` (SQLCipher), `libsodium-wrappers`, `commander` — all existing; no new packages (009-friday-hooks)
 - SQLCipher via `SqliteVault` — read-only addition (`memory_recent`); schema unchanged (009-friday-hooks)
+- `src/assets/agents.md` — static Markdown template (no runtime deps); injected into `./AGENTS.md` at configure time (009-friday-hooks)
 
 ## Recent Changes
 - 001-vault-interface: Added TypeScript 5.x / Node.js 24 LTS + None — interface definitions have no runtime dependencies
