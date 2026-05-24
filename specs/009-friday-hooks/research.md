@@ -4,26 +4,27 @@
 
 ---
 
-## Decision 1: Claude Code hook mechanism
+## Decision 1: Hook mechanism — both integrations
 
-**Decision**: `agent-friday configure --integration claude` injects Friday's behavioral layer as a bounded, marked section directly into `~/.claude/CLAUDE.md`.
+**Decision**: Both `configure --integration claude` and `configure --integration cursor` inject Friday's behavioral layer as a bounded, idempotent section into `./AGENTS.md` at the current project root. Identical mechanism for both tools. Friday is per-project opt-in — not active unless the user has explicitly run configure in that project.
 
-**Rationale**: Claude Code has no import or include syntax in CLAUDE.md. External file references in CLAUDE.md are documentation conventions only — the agent does not automatically load referenced files. The only reliable user-global mechanism is writing content directly into `~/.claude/CLAUDE.md`.
+**Rationale**: Claude Code's `~/.claude/CLAUDE.md` global injection was the original approach, but it creates an opt-out model (active everywhere until `--remove` is run). An opt-in model — where Friday is active only in projects the user has explicitly enabled — is preferable. Since Cursor has no user-global mechanism, using per-project `./AGENTS.md` for both tools gives consistent behaviour and eliminates tool-specific injection paths. The AGENTS.md format (https://agents.md/) is the established cross-tool standard for project-level agent instructions.
 
-**Mechanism**: The configure command reads `~/.agent-friday/AGENTS.md`, wraps the content in idempotency markers, and appends (or updates) the section in `~/.claude/CLAUDE.md`:
+**Mechanism**: The configure command reads `src/assets/agents.md`, wraps the content in idempotency markers, and appends (or updates) the section in `./AGENTS.md`:
 
 ```
 <!-- agent-friday:start -->
-[Friday AGENTS.md content]
+<!-- agent-friday:version:1 -->
+[Friday behavioral layer content]
 <!-- agent-friday:end -->
 ```
 
-Re-running configure replaces content between the markers. Removing the integration removes the section entirely.
+Re-running configure replaces content between the markers. Removal is manual (user deletes the bounded section) — no `--remove` flag.
 
 **Alternatives considered**:
-- Symlink `~/.agent-friday/AGENTS.md` into `~/.claude/` — Claude Code does not auto-load files in that directory beyond `CLAUDE.md` itself
-- Copy `AGENTS.md` to `~/.claude/AGENTS.md` — not auto-discovered
-- Reference via markdown link in CLAUDE.md — links are not processed; content is not loaded
+- Global `~/.claude/CLAUDE.md` injection for Claude Code — user-global opt-out model; rejected in favour of per-project opt-in
+- Symlink `./AGENTS.md -> ~/.agent-friday/AGENTS.md` — clobbers existing project AGENTS.md; not viable
+- Copy content per project from a canonical path — updates don't propagate; requires re-run after upgrades
 
 ---
 
@@ -44,9 +45,9 @@ Re-running configure replaces content between the markers. Removing the integrat
 
 ## Decision 3: AGENTS.md content structure
 
-**Decision**: `~/.agent-friday/AGENTS.md` is the single authored source of Friday's behavioral layer. It encodes: (1) Friday's role, (2) judgment criteria, (3) the approval interaction pattern, (4) the vault tool bindings. Content follows the AGENTS.md open format (https://agents.md/).
+**Decision**: `src/assets/agents.md` is the source-controlled template for Friday's behavioral layer. It encodes: (1) Friday's role, (2) judgment criteria, (3) the approval interaction pattern, (4) the vault tool bindings. Content follows the AGENTS.md open format (https://agents.md/).
 
-**Rationale**: Keeping content in one canonical file means all integrations benefit from updates to Friday's behavior without re-running configure — for Claude Code, configure injects a fresh copy; for Cursor, the canonical file is always current for manual project setup.
+**Rationale**: Keeping content in a source-controlled template means all integrations inject from the same source. Re-running configure after an upgrade picks up the latest content automatically.
 
 **Structure**:
 ```markdown

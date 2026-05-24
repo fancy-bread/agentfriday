@@ -43,18 +43,18 @@ A developer runs `/friday-review` and sees a paginated list of recent vault entr
 
 ### User Story 3 — Friday Behavior is Available in Any AGENTS.md-Compatible Tool (Priority: P1)
 
-A developer uses both Claude Code and Cursor. Claude Code gets Friday's behavioral layer injected globally into `~/.claude/CLAUDE.md` — active in every session. Cursor has no user-global mechanism, so the developer runs `agent-friday configure --integration cursor` from each project where they want Friday active. This injects Friday's content as a bounded, idempotent section into the project's existing `./AGENTS.md`. If no `./AGENTS.md` exists, one is created. The same marker pattern used for Claude Code ensures re-runs update in place without duplicating content.
+A developer uses both Claude Code and Cursor. For any project where they want Friday active, they run `agent-friday configure --integration <tool>` from that project root. This injects Friday's content as a bounded, idempotent section into `./AGENTS.md` — creating the file if absent, preserving existing content if present. Both tools use the identical mechanism. Friday is an explicit opt-in per project; it is never active unless the user has run configure in that project.
 
-**Why this priority**: The multi-integration architecture from 008 is the product's portability promise. Injecting into the project's existing `AGENTS.md` means Friday's behavioral layer coexists with project-specific guidance without overwriting it.
+**Why this priority**: The multi-integration architecture from 008 is the product's portability promise. A consistent per-project opt-in model gives both tools identical behaviour and puts the user in control — Friday is active where they choose, nowhere else.
 
-**Independent Test**: From a Cursor project root with an existing `AGENTS.md`, run `agent-friday configure --integration cursor`. Confirm the Friday section is appended between idempotency markers. Re-run configure — confirm the section is replaced, not duplicated. Open a Cursor session. Make a decision. Confirm the approval prompt surfaces.
+**Independent Test**: From a project root with an existing `AGENTS.md`, run `agent-friday configure --integration claude`. Confirm the Friday section is appended between idempotency markers; existing content preserved. Re-run — section replaced, not duplicated. Repeat with `--integration cursor`. Confirm identical output.
 
 **Acceptance Scenarios**:
 
-1. **Given** a project with an existing `./AGENTS.md`, **When** `agent-friday configure --integration cursor` is run from that project root, **Then** Friday's behavioral layer is appended as a bounded section — existing content is preserved.
-2. **Given** no `./AGENTS.md` exists in the project, **When** `agent-friday configure --integration cursor` is run, **Then** `./AGENTS.md` is created containing only the Friday section.
+1. **Given** a project with an existing `./AGENTS.md`, **When** `agent-friday configure --integration <tool>` is run from that project root, **Then** Friday's behavioral layer is appended as a bounded section — existing content is preserved.
+2. **Given** no `./AGENTS.md` exists in the project, **When** `agent-friday configure --integration <tool>` is run, **Then** `./AGENTS.md` is created containing only the Friday section.
 3. **Given** the Friday section is already present, **When** configure is run again, **Then** the section is replaced in place — no duplication, existing content outside the markers is unchanged.
-4. **Given** Friday is configured for Claude Code, **When** a noteworthy moment occurs in a Claude Code session, **Then** the host agent surfaces an approval prompt using Friday's criteria.
+4. **Given** configure has been run for both Claude Code and Cursor in the same project, **When** a noteworthy moment occurs, **Then** both tools surface an approval prompt using the same Friday criteria.
 
 ---
 
@@ -74,7 +74,7 @@ A developer uses both Claude Code and Cursor. Claude Code gets Friday's behavior
 ### Functional Requirements
 
 - **FR-001**: Friday's behavioral layer MUST be authored as a source-controlled template (`src/assets/agents.md`) and injected into the appropriate target file at configure time. The template encodes Friday's identity, judgment criteria, approval interaction pattern, and tool bindings.
-- **FR-002**: `agent-friday configure --integration claude` MUST inject the behavioral layer as a bounded, idempotent section into `~/.claude/CLAUDE.md` — user-global for all Claude Code sessions. `agent-friday configure --integration cursor` MUST inject the same bounded section into `./AGENTS.md` at the current project root (creating the file if absent) — per-project for Cursor, since no user-global mechanism exists.
+- **FR-002**: `agent-friday configure --integration <tool>` MUST inject the behavioral layer as a bounded, idempotent section into `./AGENTS.md` at the current project root — creating the file if absent, updating the marked section if already present. Both Claude Code and Cursor use this same per-project mechanism. Friday is active only in projects where the user has explicitly run configure.
 - **FR-003**: The AGENTS.md MUST encode Friday's judgment criteria: noteworthy moments are explicit decisions, non-obvious constraints, resolved ambiguities, and changed assumptions. Not noteworthy: casual remarks, questions, status updates.
 - **FR-004**: The AGENTS.md MUST encode the approval interaction pattern: before writing any vault entry, the host agent MUST surface "Should I remember: [brief restatement of content]? Yes / No / Edit."
 - **FR-005**: On Yes, the host agent MUST call `memory_append` with the identified content and confirm in plain language.
@@ -99,7 +99,7 @@ A developer uses both Claude Code and Cursor. Claude Code gets Friday's behavior
 
 - **SC-001**: In a session containing at least one explicit decision, the host agent surfaces an approval prompt for it before the conversation moves more than two turns past the decision point, in 100% of test scenarios.
 - **SC-002**: The host agent does not surface an approval prompt for casual remarks, questions, or status updates in 100% of test scenarios.
-- **SC-003**: Friday behavior is active in Claude Code globally and in each configured Cursor project after running `agent-friday configure` for each — no additional setup required beyond running configure from each Cursor project where Friday is needed.
+- **SC-003**: Friday behavior is active in any project — Claude Code or Cursor — after running `agent-friday configure --integration <tool>` from that project root. No additional setup required beyond that explicit opt-in.
 - **SC-004**: `/friday-review` returns results within 2 seconds for vaults with up to 1,000 entries.
 - **SC-005**: No vault entry is written without explicit user approval — zero unauthorised writes in all test scenarios.
 - **SC-006**: The full capture-review-correct loop (agent proposes → user approves → user reviews → user amends) completes without leaving the agent session.
@@ -107,9 +107,9 @@ A developer uses both Claude Code and Cursor. Claude Code gets Friday's behavior
 ## Assumptions
 
 - The vault server process is already running when Friday's behavioral layer is active. Daemon lifecycle management is handled by existing `agent-friday start` / `agent-friday status` commands.
-- `~/.agent-friday/AGENTS.md` is the single canonical source for Friday's behavioral layer. Claude Code injects its content globally into `~/.claude/CLAUDE.md`. Cursor has no user-global mechanism; configure injects the same content as a bounded section into the project's `./AGENTS.md` — the same marker pattern used for Claude Code.
-- The Cursor injection modifies a project file. If the project commits `AGENTS.md`, the Friday section will be committed too — this is acceptable since the section is team-useful. Configure does not modify `.gitignore`.
-- Removing Friday from a Cursor project is out of scope for v1. The user can manually delete the bounded section from `./AGENTS.md`. A `--remove` flag for Cursor is a v2 candidate, consistent with the `--remove` flag provided for Claude Code.
+- `src/assets/agents.md` is the source-controlled template for Friday's behavioral layer. Configure reads it and injects a bounded section into `./AGENTS.md` at the project root. Both Claude Code and Cursor use this identical mechanism — no tool-specific injection paths.
+- The injection modifies a project file. If the project commits `AGENTS.md`, the Friday section will be committed — this is acceptable since the section is team-useful. Configure does not modify `.gitignore`.
+- Removing Friday from a project is not a configure command — the user manually deletes the bounded section from `./AGENTS.md`. There is no `--remove` flag; opt-in per project means removal is equally explicit.
 - AGENTS.md as a format is supported by Claude Code and Cursor. The convention is defined at https://agents.md/. Tools that do not support AGENTS.md or an equivalent user-level instruction file are out of scope for v1.
 - The `memory_recent` tool is the only new MCP tool required. Existing `memory_append`, `memory_query`, `memory_amend`, and `memory_redact` tools are unchanged.
 - Judgment criteria are encoded in the AGENTS.md, not in vault business logic. The vault remains criteria-agnostic.

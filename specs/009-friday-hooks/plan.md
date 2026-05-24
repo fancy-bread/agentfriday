@@ -4,7 +4,7 @@
 
 ## Summary
 
-Deliver Friday's behavioral layer (judgment criteria + approval interaction pattern) to host agents via an injected AGENTS.md section. Source template lives at `src/assets/agents.md`. `agent-friday configure --integration claude` injects it as an idempotent bounded section into `~/.claude/CLAUDE.md` (user-global). `agent-friday configure --integration cursor` injects the same section into `./AGENTS.md` at the project root (per-project; Cursor has no user-global mechanism). A new `memory_recent` MCP tool and `friday-review` skill complete the capture-review-correct loop.
+Deliver Friday's behavioral layer (judgment criteria + approval interaction pattern) to host agents via a per-project opt-in. Source template lives at `src/assets/agents.md`. `agent-friday configure --integration <tool>` injects it as an idempotent bounded section into `./AGENTS.md` at the current project root — identical mechanism for both Claude Code and Cursor. Friday is active only in projects where the user has explicitly run configure. A new `memory_recent` MCP tool and `friday-review` skill complete the capture-review-correct loop.
 
 ## Technical Context
 
@@ -89,18 +89,13 @@ skills/
 1. Author `src/assets/agents.md` — role declaration, judgment criteria, approval pattern, tool bindings
 2. Manual review: confirm content correctly encodes FR-003 (judgment criteria), FR-004 (approval pattern), FR-005 (Yes → append), FR-006 (No → discard), FR-007 (Edit → revise + append), FR-008 (exclusion criteria), FR-009 (duplicate guard)
 
-### Phase D: Configure Command — Claude Integration
+### Phase D: Configure Command — AGENTS.md Injection (Both Integrations)
 
-1. Update `src/cli/configure.ts` — claude handler reads `src/assets/agents.md`, wraps in idempotency markers, appends to (or updates in) `~/.claude/CLAUDE.md`
-2. Add `--remove` flag: strips the marked section from `~/.claude/CLAUDE.md`
-3. Integration test: inject, re-inject (idempotent), remove
+1. Update `src/cli/configure.ts` — implement shared inject utility: read `src/assets/agents.md`, wrap in idempotency markers, append to or replace marked section in `./AGENTS.md` at CWD (create file if absent)
+2. Wire both claude and cursor handlers to call the shared utility — no tool-specific injection logic
+3. Integration test: existing `./AGENTS.md` — Friday section appended, prior content preserved; no `./AGENTS.md` — file created; re-run — section replaced not duplicated
 
-### Phase E: Configure Command — Cursor Integration
-
-1. Update `src/cli/configure.ts` — cursor handler injects Friday's content into `./AGENTS.md` at CWD using idempotency markers (create file if absent); extract shared inject/update/remove utility reused by both claude and cursor handlers
-2. Integration test: existing AGENTS.md — Friday section appended, prior content preserved; no AGENTS.md — file created; re-run — section replaced not duplicated
-
-### Phase F: friday-review Skill
+### Phase E: friday-review Skill
 
 1. Author `skills/friday-review/SKILL.md` per `contracts/friday-review.md`
 2. Install via `agent-friday configure` (same path as existing skills — 008)
@@ -108,6 +103,6 @@ skills/
 ## Key Dependencies
 
 - Phase B depends on Phase A (interface must exist before MCP tool)
-- Phase D and E depend on Phase C (AGENTS.md content must be authored first)
-- Phase F is independent of A–E (skill file only; references tool by name)
-- All phases are independent of each other otherwise — can be parallelised within those constraints
+- Phase D depends on Phase C (AGENTS.md content must be authored first)
+- Phase E (friday-review skill) is independent of A–D (skill file only; references tool by name)
+- All other phases are independent — can be parallelised within those constraints

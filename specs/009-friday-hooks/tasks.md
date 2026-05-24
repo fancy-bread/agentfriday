@@ -12,9 +12,9 @@
 
 ## Phase 1: Foundational (Blocking Prerequisite)
 
-**Purpose**: Add `listRecent` to the `MemoryVault` interface and implement it in `SqliteVault`. This is the only shared prerequisite — it unblocks Phase 3 (US2) without blocking Phases 2 or 4.
+**Purpose**: Add `listRecent` to the `MemoryVault` interface and implement it in `SqliteVault`. Unblocks Phase 3 (US2) only — Phases 2 and 4 can start immediately in parallel.
 
-**⚠️ CRITICAL**: US2 MCP work cannot begin until this phase is complete. US1 and US3 can proceed in parallel.
+**⚠️ CRITICAL**: US2 MCP work cannot begin until this phase is complete.
 
 - [ ] T001 Add `RecentEntry`, `RecentResult` types and `listRecent(limit: number, offset: number): Promise<RecentResult>` to `src/vault/MemoryVault.ts`
 - [ ] T002 Implement `listRecent` in `src/vault/SqliteVault.ts` — SELECT with `superseded_by IS NULL AND redacted_at IS NULL`, ORDER BY `created_at DESC`, LIMIT/OFFSET; count query for total
@@ -24,35 +24,22 @@
 
 ---
 
-## Phase 2: User Story 1 — Host Agent Behavioral Layer / Claude Code (Priority: P1) 🎯 MVP
+## Phase 2: User Story 1 + 3 — AGENTS.md Content + Configure Injection (Priority: P1) 🎯 MVP
 
-**Goal**: Friday's judgment criteria and approval pattern are active in every Claude Code session after `agent-friday configure --integration claude`.
+**Goal**: `agent-friday configure --integration <tool>` injects Friday's behavioral layer into `./AGENTS.md` at the project root. Both Claude Code and Cursor use identical mechanism. Friday is active only in projects where the user has explicitly run configure — per-project opt-in.
 
-**Independent Test**: Run `agent-friday configure --integration claude`. Open a new Claude Code session. Make an explicit decision. Confirm the approval prompt surfaces. Confirm vault entry is written on Yes. Confirm nothing is written on No.
+**Independent Test**: From a project root, run `agent-friday configure --integration claude`. Confirm Friday section appended to `./AGENTS.md` between markers; existing content preserved. Re-run — section replaced not duplicated. Repeat with `--integration cursor` — confirm identical result. Open a session, make a decision, confirm approval prompt surfaces.
 
 - [ ] T004 [US1] Author `src/assets/agents.md` — role declaration, judgment criteria (decisions / constraints / resolved ambiguities / changed assumptions), exclusion criteria (remarks / questions / status updates), approval pattern ("Should I remember: [content]? Yes / No / Edit"), tool bindings (`memory_append`, `memory_recent`)
-- [ ] T005 [US1] Update `src/cli/configure.ts` claude handler: read `src/assets/agents.md`, wrap content in idempotency markers (`<!-- agent-friday:start -->` / `<!-- agent-friday:version:1 -->` / `<!-- agent-friday:end -->`), append to or replace marked section in `~/.claude/CLAUDE.md`
-- [ ] T006 [US1] Add `--remove` flag to configure claude handler: strip bounded section from `~/.claude/CLAUDE.md` leaving surrounding content intact
-- [ ] T007 [US1] Integration test in `tests/integration/` — first inject: markers + content written to `~/.claude/CLAUDE.md`; re-inject: section replaced not duplicated; remove: section stripped cleanly
+- [ ] T005 [US1] Implement shared inject utility in `src/cli/configure.ts`: read `src/assets/agents.md`, wrap in idempotency markers (`<!-- agent-friday:start -->` / `<!-- agent-friday:version:1 -->` / `<!-- agent-friday:end -->`), append to or replace marked section in `./AGENTS.md` at CWD (create file if absent) — depends on T004
+- [ ] T006 [US3] Wire both claude and cursor handlers in `src/cli/configure.ts` to call the shared inject utility — no tool-specific injection logic; integration-specific behaviour limited to skill installation path
+- [ ] T007 [US1] Integration test in `tests/integration/` — existing `./AGENTS.md`: Friday section appended, prior content preserved; no `./AGENTS.md`: file created with Friday section only; re-run: section replaced not duplicated
 
-**Checkpoint**: US1 fully functional — Claude Code sessions have Friday behavior active after configure
-
----
-
-## Phase 3: User Story 3 — Cursor Integration (Priority: P1)
-
-**Goal**: `agent-friday configure --integration cursor` (run from a project root) injects Friday's content as a bounded, idempotent section into `./AGENTS.md` — same marker pattern as the Claude Code handler. Existing project content is preserved. Idempotent on re-run.
-
-**Independent Test**: From a project root with an existing `AGENTS.md`, run `agent-friday configure --integration cursor`. Confirm Friday section is appended between markers; existing content unchanged. Re-run — confirm section replaced, not duplicated. From a project root with no `AGENTS.md`, run configure — confirm file is created with Friday section only.
-
-- [ ] T008 [US3] Update `src/cli/configure.ts` cursor handler: read `src/assets/agents.md`, wrap in idempotency markers, append to or replace marked section in `./AGENTS.md` at CWD (create file if absent); extract shared inject/update/remove utility used by both claude and cursor handlers — depends on T004
-- [ ] T009 [US3] Integration test in `tests/integration/` — existing AGENTS.md: Friday section appended, existing content preserved; no AGENTS.md: file created with Friday section; re-run: section replaced not duplicated
-
-**Checkpoint**: US3 complete — Claude Code global injection and Cursor per-project injection both handled by configure; shared inject utility in place
+**Checkpoint**: US1 + US3 fully functional — any project using Claude Code or Cursor has Friday behavior after `agent-friday configure`
 
 ---
 
-## Phase 4: User Story 2 — Friday Review (Priority: P2)
+## Phase 3: User Story 2 — Friday Review (Priority: P2)
 
 **Goal**: `/friday-review` lists recent vault entries with timestamps for audit; user can page through and invoke `friday-amend` / `friday-forget` to correct entries.
 
@@ -60,20 +47,20 @@
 
 **Prerequisite**: T001–T003 (Foundational) must be complete.
 
-- [ ] T010 [P] [US2] Author `src/mcp/tools/memory-recent.ts` — input validation (limit 1–50, offset ≥ 0), call `vault.listRecent()`, return `RecentResult`; handle empty vault and tool errors
-- [ ] T011 [US2] Register `memory_recent` tool in MCP server (`src/mcp/server.ts` or equivalent tool registry) — depends on T010
-- [ ] T012 [US2] End-to-end test in `tests/integration/` — `memory_recent` tool call against running server: pagination, empty vault, out-of-range limit returns tool error; verify response time for 1,000-entry vault meets SC-004 (under 2 seconds)
-- [ ] T013 [P] [US2] Author `skills/friday-review/SKILL.md` per `specs/009-friday-hooks/contracts/friday-review.md` — role, steps (call `memory_recent`, display list, pagination, correction prompt), error handling
-- [ ] T014 [US2] Update configure handlers (claude + cursor) in `src/cli/configure.ts` to install `friday-review` skill alongside existing skills — no new command required
+- [ ] T008 [P] [US2] Author `src/mcp/tools/memory-recent.ts` — input validation (limit 1–50, offset ≥ 0), call `vault.listRecent()`, return `RecentResult`; handle empty vault and tool errors
+- [ ] T009 [US2] Register `memory_recent` tool in MCP server (`src/mcp/server.ts` or equivalent tool registry) — depends on T008
+- [ ] T010 [US2] End-to-end test in `tests/integration/` — `memory_recent` tool call against running server: pagination, empty vault, out-of-range limit returns tool error; verify response time for 1,000-entry vault meets SC-004 (under 2 seconds)
+- [ ] T011 [P] [US2] Author `skills/friday-review/SKILL.md` per `specs/009-friday-hooks/contracts/friday-review.md` — role, steps (call `memory_recent`, display list, pagination, correction prompt), error handling
+- [ ] T012 [US2] Update configure handlers (claude + cursor) in `src/cli/configure.ts` to install `friday-review` skill alongside existing skills — no new command required
 
 **Checkpoint**: US2 complete — full capture-review-correct loop functional: Friday proposes → user approves → user reviews → user amends
 
 ---
 
-## Phase 5: Polish & Cross-Cutting Concerns
+## Phase 4: Polish & Cross-Cutting Concerns
 
-- [ ] T015 [P] Update `CLAUDE.md` Active Technologies section: add `src/assets/agents.md` (static content, no runtime deps) for 009-friday-hooks
-- [ ] T016 Run quickstart.md validation — smoke test Claude Code injection end-to-end; confirm `--remove` strips section cleanly; confirm Cursor per-project injection into `./AGENTS.md` with markers present and prior content intact
+- [ ] T013 [P] Update `CLAUDE.md` Active Technologies section: add `src/assets/agents.md` (static content, no runtime deps) for 009-friday-hooks
+- [ ] T014 Run quickstart.md validation — smoke test per-project injection for both integrations; confirm both produce identical `./AGENTS.md` output; confirm Cursor and Claude Code sessions both surface approval prompt
 
 ---
 
@@ -82,31 +69,28 @@
 ### Phase Dependencies
 
 - **Foundational (Phase 1)**: No dependencies — start immediately
-- **US1 (Phase 2)**: Independent of Phase 1 — can start immediately in parallel with Phase 1
-- **US3 (Phase 3)**: Depends on T004 (AGENTS.md content authored in US1) — start after T004
-- **US2 (Phase 4)**: Depends on Phase 1 complete (T001–T003) — start after Foundational checkpoint
-- **Polish (Phase 5)**: Depends on all user story phases complete
+- **US1+US3 (Phase 2)**: Independent of Phase 1 — start immediately in parallel with Phase 1
+- **US2 (Phase 3)**: Depends on Phase 1 complete (T001–T003)
+- **Polish (Phase 4)**: Depends on all prior phases complete
 
-### User Story Dependencies
+### Task Dependencies
 
-- **US1 (P1)**: No dependency on other stories — start immediately
-- **US3 (P1)**: Depends on T004 only (shared AGENTS.md content) — can start as soon as AGENTS.md is authored
-- **US2 (P2)**: Depends on Foundational phase — independent of US1 and US3 otherwise
+- T002 depends on T001; T003 depends on T002
+- T005 depends on T004; T006 depends on T005; T007 depends on T006
+- T009 depends on T008; T010 depends on T009
+- T008 and T011 are parallel (different files)
 
 ### Parallel Opportunities
 
-- T001–T003 (Foundational) run sequentially (T002 depends on T001; T003 depends on T002)
-- T004–T007 (US1) and T001–T003 (Foundational) can run in parallel — different files
-- T008 can start as soon as T004 is complete
-- T010 and T013 are parallel — different files (MCP tool vs skill file)
-- T011 depends on T010; T012 depends on T011
+- T001–T003 (Foundational) and T004–T007 (US1+US3) run in parallel — no shared files
+- T008 and T011 run in parallel within Phase 3
 
 ---
 
-## Parallel Example: US1 + Foundational
+## Parallel Example: Phase 1 + Phase 2
 
 ```
-# These can run simultaneously (different files):
+# These can run simultaneously:
 Agent A: T001 → T002 → T003   (MemoryVault interface + SqliteVault + tests)
 Agent B: T004 → T005 → T006 → T007   (AGENTS.md content + configure.ts + tests)
 ```
@@ -115,20 +99,19 @@ Agent B: T004 → T005 → T006 → T007   (AGENTS.md content + configure.ts + t
 
 ## Implementation Strategy
 
-### MVP First (US1 Only — 4 tasks)
+### MVP First (US1+US3 — 4 tasks)
 
 1. T004 — Author AGENTS.md content
-2. T005 — Configure claude handler (inject)
-3. T006 — Configure claude handler (remove)
+2. T005 — Shared inject utility
+3. T006 — Wire both handlers
 4. T007 — Integration test
-5. **STOP and VALIDATE**: Open Claude Code session, make a decision, confirm approval prompt
+5. **STOP and VALIDATE**: Run configure from a project, open session, confirm approval prompt
 
 ### Incremental Delivery
 
-1. Foundational (T001–T003) + US1 (T004–T007) in parallel → validate behavioral layer in Claude Code
-2. US3 (T008–T009) → validate Cursor canonical install
-3. US2 (T010–T014) → validate review loop end-to-end
-4. Polish (T015–T016)
+1. Foundational (T001–T003) + US1+US3 (T004–T007) in parallel → validate behavioral layer in both tools
+2. US2 (T008–T012) → validate review loop end-to-end
+3. Polish (T013–T014)
 
 ---
 
@@ -136,10 +119,9 @@ Agent B: T004 → T005 → T006 → T007   (AGENTS.md content + configure.ts + t
 
 | Phase | Tasks | Story | Notes |
 |-------|-------|-------|-------|
-| Foundational | T001–T003 | — | Blocks US2 only; run in parallel with US1 |
-| US1 | T004–T007 | US1 | MVP — AGENTS.md + Claude Code hook |
-| US3 | T008–T009 | US3 | Cursor hook; depends on T004 |
-| US2 | T010–T014 | US2 | Review loop; depends on Foundational |
-| Polish | T015–T016 | — | — |
+| Foundational | T001–T003 | — | Blocks US2 only; run in parallel with Phase 2 |
+| US1+US3 | T004–T007 | US1, US3 | MVP — identical mechanism for both tools |
+| US2 | T008–T012 | US2 | Review loop; depends on Foundational |
+| Polish | T013–T014 | — | — |
 
-**Total**: 16 tasks | **MVP**: 4 tasks (US1 only) | **Parallel opportunities**: Foundational ∥ US1
+**Total**: 14 tasks | **MVP**: 4 tasks (US1+US3) | **Parallel opportunities**: Phase 1 ∥ Phase 2
