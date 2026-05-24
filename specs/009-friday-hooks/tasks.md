@@ -41,14 +41,14 @@
 
 ## Phase 3: User Story 3 — Cursor Integration (Priority: P1)
 
-**Goal**: `agent-friday configure --integration cursor` installs `~/.agent-friday/AGENTS.md` (canonical path) and prints actionable manual project-level setup instructions.
+**Goal**: `agent-friday configure --integration cursor` (run from a project root) injects Friday's content as a bounded, idempotent section into `./AGENTS.md` — same marker pattern as the Claude Code handler. Existing project content is preserved. Idempotent on re-run.
 
-**Independent Test**: Run `agent-friday configure --integration cursor`. Confirm `~/.agent-friday/AGENTS.md` exists with correct content. Confirm output message includes manual setup instructions for Cursor project-level rules.
+**Independent Test**: From a project root with an existing `AGENTS.md`, run `agent-friday configure --integration cursor`. Confirm Friday section is appended between markers; existing content unchanged. Re-run — confirm section replaced, not duplicated. From a project root with no `AGENTS.md`, run configure — confirm file is created with Friday section only.
 
-- [ ] T008 [P] [US3] Update `src/cli/configure.ts` cursor handler: copy `src/assets/agents.md` to `~/.agent-friday/AGENTS.md`; print manual setup instructions directing user to copy to `.cursor/rules/` or project AGENTS.md
-- [ ] T009 [US3] Integration test in `tests/integration/` — canonical file written at `~/.agent-friday/AGENTS.md`; content matches source; output message contains correct instructions
+- [ ] T008 [US3] Update `src/cli/configure.ts` cursor handler: read `src/assets/agents.md`, wrap in idempotency markers, append to or replace marked section in `./AGENTS.md` at CWD (create file if absent); extract shared inject/update/remove utility used by both claude and cursor handlers — depends on T004
+- [ ] T009 [US3] Integration test in `tests/integration/` — existing AGENTS.md: Friday section appended, existing content preserved; no AGENTS.md: file created with Friday section; re-run: section replaced not duplicated
 
-**Checkpoint**: US3 complete — both Claude Code and Cursor integrations handled by configure; canonical AGENTS.md in place
+**Checkpoint**: US3 complete — Claude Code global injection and Cursor per-project injection both handled by configure; shared inject utility in place
 
 ---
 
@@ -62,7 +62,7 @@
 
 - [ ] T010 [P] [US2] Author `src/mcp/tools/memory-recent.ts` — input validation (limit 1–50, offset ≥ 0), call `vault.listRecent()`, return `RecentResult`; handle empty vault and tool errors
 - [ ] T011 [US2] Register `memory_recent` tool in MCP server (`src/mcp/server.ts` or equivalent tool registry) — depends on T010
-- [ ] T012 [US2] End-to-end test in `tests/integration/` — `memory_recent` tool call against running server: pagination, empty vault, out-of-range limit returns tool error
+- [ ] T012 [US2] End-to-end test in `tests/integration/` — `memory_recent` tool call against running server: pagination, empty vault, out-of-range limit returns tool error; verify response time for 1,000-entry vault meets SC-004 (under 2 seconds)
 - [ ] T013 [P] [US2] Author `skills/friday-review/SKILL.md` per `specs/009-friday-hooks/contracts/friday-review.md` — role, steps (call `memory_recent`, display list, pagination, correction prompt), error handling
 - [ ] T014 [US2] Update configure handlers (claude + cursor) in `src/cli/configure.ts` to install `friday-review` skill alongside existing skills — no new command required
 
@@ -73,7 +73,7 @@
 ## Phase 5: Polish & Cross-Cutting Concerns
 
 - [ ] T015 [P] Update `CLAUDE.md` Active Technologies section: add `src/assets/agents.md` (static content, no runtime deps) for 009-friday-hooks
-- [ ] T016 Run quickstart.md validation — smoke test Claude Code injection path end-to-end; confirm removal is clean; confirm Cursor canonical file path
+- [ ] T016 Run quickstart.md validation — smoke test Claude Code injection end-to-end; confirm `--remove` strips section cleanly; confirm Cursor per-project injection into `./AGENTS.md` with markers present and prior content intact
 
 ---
 

@@ -29,17 +29,16 @@ Re-running configure replaces content between the markers. Removing the integrat
 
 ## Decision 2: Cursor hook mechanism
 
-**Decision**: Cursor has no user-global rules mechanism. For v1, `configure --integration cursor` installs `~/.agent-friday/AGENTS.md` (canonical) but does not inject it into Cursor automatically. Cursor support is documented as requiring manual project-level setup.
+**Decision**: Cursor has no user-global rules mechanism. `configure --integration cursor` (run from a project root) injects Friday's content as a bounded, idempotent section into the project's `./AGENTS.md` — the same marker pattern used for Claude Code's `~/.claude/CLAUDE.md` injection. If no `./AGENTS.md` exists, one is created. Developer runs configure once per project where Friday is needed.
 
-**Rationale**: Investigation of Cursor's configuration found no `userRules`, `globalRules`, or equivalent field. Rules live at `~/.cursor/projects/<project-hash>/rules/` (project-scoped) or as `.cursorules` at project root. There is no path that applies to all Cursor sessions regardless of project.
+**Rationale**: Injecting into the existing `./AGENTS.md` coexists with project-specific guidance without overwriting it. The shared marker pattern keeps both integration handlers consistent — one inject/update/remove utility, two target files. The committed Friday section is team-useful (any team member with the daemon running gets Friday behavior), not user-private.
 
-**v1 behaviour**: `configure --integration cursor` confirms the canonical AGENTS.md is in place and prints instructions for manual project-level setup. The MCP integration (from 008) remains unchanged and fully functional.
-
-**v2 candidate**: If Cursor ships a user-global rules mechanism, the `cursor` integration handler adds an injection step — no spec change required, additive only.
+**v2 candidate**: If Cursor ships a user-global rules mechanism, the cursor handler adds a global injection step alongside or replacing the per-project approach.
 
 **Alternatives considered**:
-- Write to every Cursor project directory — fragile, does not scale, breaks on new projects
-- Embed Friday behavior entirely in the MCP server — the MCP server is tool-agnostic infrastructure; behavioral guidance belongs in the agent layer, not the vault layer
+- Symlink `./AGENTS.md -> ~/.agent-friday/AGENTS.md` — clobbers existing project AGENTS.md; not viable
+- Copy content per project — updates don't propagate without re-running configure after upgrades
+- Write to every Cursor project directory automatically — configure has no knowledge of all user projects
 
 ---
 

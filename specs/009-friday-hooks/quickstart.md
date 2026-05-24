@@ -36,19 +36,26 @@ Configure is idempotent — it replaces the marked section in place.
 
 ## Cursor
 
-Cursor does not support a user-global rules mechanism. Friday's behavioral layer requires manual project-level setup.
-
-After `agent-friday configure --integration cursor`, the canonical AGENTS.md is at `~/.agent-friday/AGENTS.md`.
-
-**For each project where you want Friday behavior:**
+Cursor has no user-global rules mechanism. Friday's behavioral layer is activated per project by running configure from the project root.
 
 ```bash
-cp ~/.agent-friday/AGENTS.md /path/to/your/project/AGENTS.md
+cd /path/to/your/project
+agent-friday configure --integration cursor
 ```
 
-Or reference it from an existing `.cursor/rules/` file.
+This injects Friday's behavioral layer as a bounded section into the project's `./AGENTS.md`. If no `AGENTS.md` exists, one is created. Existing project content outside the markers is preserved.
 
-The MCP integration (vault tools) is fully active regardless — `memory_append`, `memory_query`, `memory_amend`, `memory_redact`, and `memory_recent` are all available in any Cursor session where the daemon is running.
+To verify:
+
+```bash
+grep -n "agent-friday" AGENTS.md
+# <!-- agent-friday:start -->  (line N)
+# <!-- agent-friday:end -->    (line M)
+```
+
+Configure is idempotent — re-running replaces the section in place. Run it again after upgrading `agent-friday` to pick up updated behavioral layer content.
+
+The MCP integration (vault tools) is fully active regardless — `memory_append`, `memory_query`, `memory_amend`, `memory_redact`, and `memory_recent` are available in any Cursor session where the daemon is running.
 
 ---
 

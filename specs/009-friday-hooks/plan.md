@@ -4,7 +4,7 @@
 
 ## Summary
 
-Deliver Friday's behavioral layer (judgment criteria + approval interaction pattern) to host agents via AGENTS.md, installed at `~/.agent-friday/AGENTS.md`. For Claude Code, `agent-friday configure` injects the content into `~/.claude/CLAUDE.md` as an idempotent bounded section. For Cursor, configure confirms the canonical file is in place and documents manual project-level setup (no user-global mechanism exists in Cursor v1). A new `memory_recent` MCP tool and `friday-review` skill complete the capture-review-correct loop.
+Deliver Friday's behavioral layer (judgment criteria + approval interaction pattern) to host agents via an injected AGENTS.md section. Source template lives at `src/assets/agents.md`. `agent-friday configure --integration claude` injects it as an idempotent bounded section into `~/.claude/CLAUDE.md` (user-global). `agent-friday configure --integration cursor` injects the same section into `./AGENTS.md` at the project root (per-project; Cursor has no user-global mechanism). A new `memory_recent` MCP tool and `friday-review` skill complete the capture-review-correct loop.
 
 ## Technical Context
 
@@ -57,7 +57,7 @@ src/
 │   └── tools/
 │       └── memory-recent.ts    ← new MCP tool handler
 ├── cli/
-│   └── configure.ts            ← add AGENTS.md injection (claude) + canonical install (cursor)
+│   └── configure.ts            ← add AGENTS.md injection (claude + cursor); shared inject utility
 └── assets/
     └── agents.md               ← Friday behavioral layer (authored content)
 
@@ -65,11 +65,9 @@ skills/
 └── friday-review/
     └── SKILL.md                ← new skill
 
-~/.agent-friday/
-└── AGENTS.md                   ← installed by configure (runtime artifact, not source)
 ```
 
-**Structure Decision**: Single-project layout extending existing source tree. No new directories at the root level. `assets/agents.md` is the source-controlled template; `~/.agent-friday/AGENTS.md` is the installed runtime copy.
+**Structure Decision**: Single-project layout extending existing source tree. No new directories at the root level. `assets/agents.md` is the source-controlled template; configure injects its content into target files at runtime (`~/.claude/CLAUDE.md` for Claude Code, `./AGENTS.md` at project root for Cursor).
 
 ## Implementation Phases
 
@@ -89,7 +87,7 @@ skills/
 ### Phase C: AGENTS.md Content
 
 1. Author `src/assets/agents.md` — role declaration, judgment criteria, approval pattern, tool bindings
-2. Manual review: does the content correctly encode all spec requirements (FR-003, FR-004)?
+2. Manual review: confirm content correctly encodes FR-003 (judgment criteria), FR-004 (approval pattern), FR-005 (Yes → append), FR-006 (No → discard), FR-007 (Edit → revise + append), FR-008 (exclusion criteria), FR-009 (duplicate guard)
 
 ### Phase D: Configure Command — Claude Integration
 
@@ -99,8 +97,8 @@ skills/
 
 ### Phase E: Configure Command — Cursor Integration
 
-1. Update `src/cli/configure.ts` — cursor handler copies `src/assets/agents.md` to `~/.agent-friday/AGENTS.md` and prints manual setup instructions
-2. Integration test: file written to canonical path; output message correct
+1. Update `src/cli/configure.ts` — cursor handler injects Friday's content into `./AGENTS.md` at CWD using idempotency markers (create file if absent); extract shared inject/update/remove utility reused by both claude and cursor handlers
+2. Integration test: existing AGENTS.md — Friday section appended, prior content preserved; no AGENTS.md — file created; re-run — section replaced not duplicated
 
 ### Phase F: friday-review Skill
 
